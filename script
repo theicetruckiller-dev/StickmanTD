@@ -6,30 +6,27 @@ local Workspace = game:GetService("Workspace")
 local isRunning = true
 local isMinimized = false
 local isRecording = false
-local isReplaying = false
 local recordedActions = {}
 local startTime = 0
 
--- Makro ID'leri (Kritik aksiyonlar)
-local UNIT_PLACE_ID = 200007
-local UPGRADE_SELL_ID = 200009
-local START_WAVE_ID = 7
-local RESTART_ID = 2000093 
+-- Tüm KRİTİK Remote Event ve Function'lar
+local RF_ClientRequestServer = RS:WaitForChild("RemoteFunction"):WaitForChild("clientRequestServer")
+local RE_Notice = RS:WaitForChild("RemoteEvent"):WaitForChild("RemoteEvent_Notice")
+local RF_Voting = RS:WaitForChild("RemoteFunction"):WaitForChild("RemoteFunction_Voting")
+local RE_TowerEvent = RS:WaitForChild("RemoteEvent"):WaitForChild("RemoteEvent_towerEvent")
 
 local LP = P.LocalPlayer
--- RemoteFunction'ın adı kesinleşti: clientRequestServer
-local ClientRequestServer = RS.RemoteFunction:WaitForChild("clientRequestServer")
 
 -- GUI Setup
 local SG = Instance.new("ScreenGui")
 SG.Name = "MacroGUI"
 SG.ResetOnSpawn = false
-SG.Parent = game:GetService("CoreGui") -- Exploit ortamlarında daha garantili yer
+SG.Parent = game:GetService("CoreGui") -- Exploit ortamlarında en garanti yer
 
 local MF = Instance.new("Frame")
 MF.Name = "MainFrame"
-MF.Size = UDim2.new(0, 320, 0, 280) 
-MF.Position = UDim2.new(0.5, -160, 0.5, -140)
+MF.Size = UDim2.new(0, 320, 0, 250) 
+MF.Position = UDim2.new(0.5, -160, 0.5, -125)
 MF.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
 MF.BorderSizePixel = 0
 MF.Active = true
@@ -43,7 +40,7 @@ TB.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 TB.Parent = MF
 
 local TL = Instance.new("TextLabel")
-TL.Text = "Stickman TD Macro"
+TL.Text = "Macro Recorder - List Generator"
 TL.Size = UDim2.new(1, -60, 1, 0)
 TL.Font = Enum.Font.SourceSansBold
 TL.TextSize = 18
@@ -54,7 +51,7 @@ TL.Parent = TB
 -- Status Label
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Name = "StatusLabel"
-StatusLabel.Text = "Status: Ready (0 Actions)"
+StatusLabel.Text = "Status: Ready to Record"
 StatusLabel.Size = UDim2.new(0.9, 0, 0, 20)
 StatusLabel.Position = UDim2.new(0.05, 0, 0.12, 0)
 StatusLabel.Font = Enum.Font.SourceSans
@@ -73,8 +70,8 @@ AB.Parent = MF
 
 local RecordButton = Instance.new("TextButton")
 RecordButton.Name = "RecordButton"
-RecordButton.Text = "RECORD"
-RecordButton.Size = UDim2.new(0.4, 0, 0, 50)
+RecordButton.Text = "RECORD START"
+RecordButton.Size = UDim2.new(0.9, 0, 0, 50)
 RecordButton.Position = UDim2.new(0.05, 0, 0.05, 0)
 RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0) 
 RecordButton.Font = Enum.Font.SourceSansBold
@@ -84,31 +81,20 @@ RecordButton.Parent = AB
 
 local StopButton = Instance.new("TextButton")
 StopButton.Name = "StopButton"
-StopButton.Text = "STOP"
-StopButton.Size = UDim2.new(0.4, 0, 0, 50)
-StopButton.Position = UDim2.new(0.55, 0, 0.05, 0)
-StopButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+StopButton.Text = "STOP & GENERATE LIST"
+StopButton.Size = UDim2.new(0.9, 0, 0, 50)
+StopButton.Position = UDim2.new(0.05, 0, 0.35, 0)
+StopButton.BackgroundColor3 = Color3.new(0.8, 0.8, 0)
 StopButton.Font = Enum.Font.SourceSansBold
 StopButton.TextSize = 18
-StopButton.TextColor3 = Color3.new(1, 1, 1)
+StopButton.TextColor3 = Color3.new(0, 0, 0)
 StopButton.Parent = AB
-
-local ReplayButton = Instance.new("TextButton")
-ReplayButton.Name = "ReplayButton"
-ReplayButton.Text = "REPLAY"
-ReplayButton.Size = UDim2.new(0.4, 0, 0, 50)
-ReplayButton.Position = UDim2.new(0.05, 0, 0.35, 0)
-ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
-ReplayButton.Font = Enum.Font.SourceSansBold
-ReplayButton.TextSize = 18
-ReplayButton.TextColor3 = Color3.new(1, 1, 1)
-ReplayButton.Parent = AB
 
 local ClearButton = Instance.new("TextButton")
 ClearButton.Name = "ClearButton"
-ClearButton.Text = "CLEAR"
-ClearButton.Size = UDim2.new(0.4, 0, 0, 50)
-ClearButton.Position = UDim2.new(0.55, 0, 0.35, 0)
+ClearButton.Text = "CLEAR ACTIONS"
+ClearButton.Size = UDim2.new(0.9, 0, 0, 50)
+ClearButton.Position = UDim2.new(0.05, 0, 0.65, 0)
 ClearButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
 ClearButton.Font = Enum.Font.SourceSansBold
 ClearButton.TextSize = 18
@@ -116,110 +102,162 @@ ClearButton.TextColor3 = Color3.new(1, 1, 1)
 ClearButton.Parent = AB
 
 -- Functions
-local function updateStatus(text, color)
-    if StatusLabel then
-        StatusLabel.Text = "Status: " .. text
-        StatusLabel.TextColor3 = color or Color3.new(0.8, 0.8, 0.8)
+local function serializeArg(arg)
+    if typeof(arg) == "CFrame" or typeof(arg) == "Vector3" then
+        return tostring(arg)
+    elseif typeof(arg) == "string" then
+        return string.format('"%s"', arg)
+    elseif typeof(arg) == "boolean" or typeof(arg) == "number" then
+        return tostring(arg)
+    elseif typeof(arg) == "table" then
+        local inner = {}
+        for k, v in pairs(arg) do
+            table.insert(inner, string.format("[%s]=%s", serializeArg(k), serializeArg(v)))
+        end
+        return string.format("{%s}", table.concat(inner, ", "))
+    elseif typeof(arg) == "Instance" then
+        -- Instance'lar genellikle sorun çıkarır, genellikle nil veya path olarak kaydedilir.
+        return "nil" 
+    else
+        return tostring(arg)
     end
 end
 
-local function recordAction(id, args)
+local function recordAction(remoteInstance, args)
     local timestamp = tick() - startTime
     local action = {
         time = timestamp,
-        id = id,
+        instance = remoteInstance,
         args = args
     }
     table.insert(recordedActions, action)
-    updateStatus(string.format("Recording... Actions: %d", #recordedActions), Color3.new(1, 0, 0))
+    StatusLabel.Text = string.format("Status: Recording... Actions: %d", #recordedActions)
+    RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
 end
 
--- Hook the RemoteFunction to record actions
-local originalInvokeServer = ClientRequestServer.InvokeServer
-ClientRequestServer.InvokeServer = function(self, id, ...)
-    local args = {...}
+local function generateMacroList()
+    if #recordedActions == 0 then
+        StatusLabel.Text = "ERROR: No actions recorded to list!"
+        return
+    end
+
+    local code = {}
+    table.insert(code, "-- OTOMATİK OLUŞTURULAN MAKRO KODU (4 KANAL) --")
+    table.insert(code, "local RS = game:GetService('ReplicatedStorage')")
+    table.insert(code, "local RE_Notice = RS.RemoteEvent.RemoteEvent_Notice")
+    table.insert(code, "local RF_Voting = RS.RemoteFunction.RemoteFunction_Voting")
+    table.insert(code, "local RE_TowerEvent = RS.RemoteEvent.RemoteEvent_towerEvent")
+    table.insert(code, "local RF_ClientRequestServer = RS.RemoteFunction.clientRequestServer\n")
+    table.insert(code, "while true do")
     
-    if isRecording then
-        if id == UNIT_PLACE_ID or id == UPGRADE_SELL_ID or id == START_WAVE_ID or id == RESTART_ID then
-            recordAction(id, args)
+    local previousTime = 0
+    
+    for i, action in ipairs(recordedActions) do
+        local remote = action.instance
+        local args = action.args
+        local delay = action.time - previousTime
+        previousTime = action.time
+        
+        -- Gecikmeyi ekle
+        if delay > 0.005 then 
+            table.insert(code, string.format("    task.wait(%.4f)", delay))
+        end
+
+        local args_str = {}
+        for _, arg in ipairs(args) do
+             table.insert(args_str, serializeArg(arg))
+        end
+        local args_str_final = table.concat(args_str, ", ")
+
+        if remote.ClassName == "RemoteFunction" and remote.Name == "clientRequestServer" then
+            table.insert(code, string.format("    RF_ClientRequestServer:InvokeServer(%s)", args_str_final))
+        elseif remote.ClassName == "RemoteEvent" and remote.Name == "RemoteEvent_Notice" then
+             table.insert(code, string.format("    RE_Notice:FireServer(%s)", args_str_final))
+        elseif remote.ClassName == "RemoteFunction" and remote.Name == "RemoteFunction_Voting" then
+             table.insert(code, string.format("    RF_Voting:InvokeServer(%s)", args_str_final))
+        elseif remote.ClassName == "RemoteEvent" and remote.Name == "RemoteEvent_towerEvent" then
+             table.insert(code, string.format("    RE_TowerEvent:FireServer(%s)", args_str_final))
         end
     end
+    table.insert(code, "    task.wait(1) -- Yeni döngüye geçmeden kısa bekleme")
+    table.insert(code, "end")
     
-    return originalInvokeServer(self, id, unpack(args))
+    local final_code = table.concat(code, "\n")
+    print("\n\n" .. final_code .. "\n\n")
+    StatusLabel.Text = "Status: Macro List Generated! Check F9 Console."
 end
 
--- Button Connections
+
+-- #######################################################
+-- # HOOK KISMI - TÜM KANALLARI DİNLİYORUZ
+-- #######################################################
+
+-- 1. clientRequestServer HOOK (InvokeServer)
+local originalClientRequestServer = RF_ClientRequestServer.InvokeServer
+RF_ClientRequestServer.InvokeServer = function(self, ...)
+    local args = {...}
+    if isRecording then
+        recordAction(RF_ClientRequestServer, args)
+    end
+    return originalClientRequestServer(self, unpack(args))
+end
+
+-- 2. RemoteEvent_Notice HOOK (FireServer)
+local originalNotice = RE_Notice.FireServer
+RE_Notice.FireServer = function(self, ...)
+    local args = {...}
+    if isRecording then
+        recordAction(RE_Notice, args)
+    end
+    return originalNotice(self, unpack(args))
+end
+
+-- 3. RemoteFunction_Voting HOOK (InvokeServer)
+local originalVoting = RF_Voting.InvokeServer
+RF_Voting.InvokeServer = function(self, ...)
+    local args = {...}
+    if isRecording then
+        recordAction(RF_Voting, args)
+    end
+    return originalVoting(self, unpack(args))
+end
+
+-- 4. RemoteEvent_towerEvent HOOK (FireServer)
+local originalTowerEvent = RE_TowerEvent.FireServer
+RE_TowerEvent.FireServer = function(self, ...)
+    local args = {...}
+    if isRecording then
+        recordAction(RE_TowerEvent, args)
+    end
+    return originalTowerEvent(self, unpack(args))
+end
+
+-- #######################################################
+-- # BUTTON CONNECTIONS
+-- #######################################################
+
 RecordButton.MouseButton1Click:Connect(function()
-    if isReplaying then return updateStatus("Stop Replay first!", Color3.new(1, 1, 0)) end
     if isRecording then return end
-    
     isRecording = true
     recordedActions = {}
     startTime = tick()
     RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0) 
-    updateStatus("Recording... START!", Color3.new(1, 0, 0))
+    StatusLabel.Text = "Status: Recording... START! Perform one full cycle."
 end)
 
 StopButton.MouseButton1Click:Connect(function()
-    if isRecording then
-        isRecording = false
-        RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
-        updateStatus(string.format("Stopped Recording. Actions: %d", #recordedActions), Color3.new(0, 1, 0))
-    elseif isReplaying then
-        isReplaying = false
-        ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
-        updateStatus("Replay Stopped.", Color3.new(1, 1, 0))
-    else
-        updateStatus("Nothing is running.", Color3.new(0.8, 0.8, 0.8))
-    end
-end)
-
-ReplayButton.MouseButton1Click:Connect(function()
-    if isRecording then return updateStatus("Stop Recording first!", Color3.new(1, 1, 0)) end
-    if isReplaying then return updateStatus("Replay is already running.", Color3.new(1, 1, 0)) end
-    if #recordedActions == 0 then return updateStatus("No actions recorded.", Color3.new(1, 0, 0)) end
-    
-    isReplaying = true
-    ReplayButton.BackgroundColor3 = Color3.new(0.1, 0.6, 0.1) 
-    
-    task.spawn(function()
-        while isReplaying do
-            local replayStartTime = tick()
-            for i, action in ipairs(recordedActions) do
-                if not isReplaying then break end
-                
-                local timeSinceStart = tick() - replayStartTime
-                local delayTime = action.time - timeSinceStart
-                
-                if delayTime > 0.01 then
-                    task.wait(delayTime)
-                end
-                
-                local success, result = pcall(ClientRequestServer.InvokeServer, ClientRequestServer, action.id, unpack(action.args))
-                
-                if not success then
-                    updateStatus("Replay Error! Check F9 Console.", Color3.new(1, 0, 0))
-                    isReplaying = false
-                    ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
-                    break
-                end
-                
-                updateStatus(string.format("Replaying: %d/%d (ID: %d)", i, #recordedActions, action.id), Color3.new(0, 1, 0))
-            end
-            
-            if isReplaying then
-                task.wait(0.5) 
-            end
-        end
-    end)
+    if not isRecording then return StatusLabel.Text = "Status: Nothing is recording." end
+    isRecording = false
+    RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
+    StatusLabel.Text = string.format("Status: Stopped Recording. Total Actions: %d. Generating List...", #recordedActions)
+    generateMacroList()
 end)
 
 ClearButton.MouseButton1Click:Connect(function()
-    if isRecording or isReplaying then return updateStatus("Stop active process first!", Color3.new(1, 1, 0)) end
+    if isRecording then return StatusLabel.Text = "Status: Stop recording first!" end
     recordedActions = {}
-    updateStatus("Cleared. Actions: 0", Color3.new(0.8, 0.8, 0.8))
+    StatusLabel.Text = "Status: Cleared. Actions: 0"
     RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
-    ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
 end)
 
 -- Kapatma İşlevi
@@ -236,7 +274,6 @@ CloseButton.Parent = TB
 
 CloseButton.MouseButton1Click:Connect(function()
     isRecording = false
-    isReplaying = false
     isRunning = false
     SG:Destroy()
 end)
@@ -265,7 +302,7 @@ MB.MouseButton1Click:Connect(function()
     MinimizedButton.Visible = true
 end)
 
-MinimizedButton.MouseButton1Click:Connect(function()
+MinimizedButton.MouseButton1Click:Connect(function(self, ...)
     isMinimized = false
     MF.Visible = true
     MinimizedButton.Visible = false
