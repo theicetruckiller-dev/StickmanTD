@@ -23,90 +23,102 @@ local ClientRequestServer = RS.RemoteFunction:WaitForChild("clientRequestServer"
 local SG = Instance.new("ScreenGui")
 SG.Name = "MacroGUI"
 SG.ResetOnSpawn = false
--- BURASI DÜZELTİLDİ: CoreGui'ye doğrudan atama yapılıyor.
 SG.Parent = game:GetService("CoreGui") 
 
 local MF = Instance.new("Frame")
 MF.Name = "MainFrame"
-MF.Size = UDim2.new(0, 320, 0, 250)
-MF.Position = UDim2.new(0.5, -160, 0.5, -125)
+MF.Size = UDim2.new(0, 320, 0, 280) -- GUI biraz büyütüldü
+MF.Position = UDim2.new(0.5, -160, 0.5, -140)
 MF.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
 MF.BorderSizePixel = 0
 MF.Active = true
 MF.Draggable = true
 MF.Parent = SG
 
+local TB = Instance.new("Frame")
+TB.Name = "TitleBar"
+TB.Size = UDim2.new(1, 0, 0, 30)
+TB.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+TB.Parent = MF
+
 local TL = Instance.new("TextLabel")
 TL.Text = "Stickman TD Macro"
-TL.Size = UDim2.new(1, 0, 0, 30)
-TL.Position = UDim2.new(0, 0, 0, 0)
+TL.Size = UDim2.new(1, -60, 1, 0)
 TL.Font = Enum.Font.SourceSansBold
 TL.TextSize = 18
 TL.TextColor3 = Color3.new(1, 1, 1)
-TL.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-TL.Parent = MF
+TL.BackgroundTransparency = 1
+TL.Parent = TB
 
 -- Status Label
 local StatusLabel = Instance.new("TextLabel")
 StatusLabel.Name = "StatusLabel"
-StatusLabel.Text = "Status: Ready"
+StatusLabel.Text = "Status: Ready (0 Actions)"
 StatusLabel.Size = UDim2.new(0.9, 0, 0, 20)
-StatusLabel.Position = UDim2.new(0.05, 0, 0.15, 0)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.12, 0)
 StatusLabel.Font = Enum.Font.SourceSans
 StatusLabel.TextSize = 14
-StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
 StatusLabel.BackgroundTransparency = 1
 StatusLabel.Parent = MF
+
+-- Action Bar (Buttons)
+local AB = Instance.new("Frame")
+AB.Name = "ActionBar"
+AB.Size = UDim2.new(1, 0, 0.6, 0)
+AB.Position = UDim2.new(0, 0, 0.25, 0)
+AB.BackgroundTransparency = 1
+AB.Parent = MF
 
 -- Buttons
 local RecordButton = Instance.new("TextButton")
 RecordButton.Name = "RecordButton"
 RecordButton.Text = "RECORD"
-RecordButton.Size = UDim2.new(0.4, 0, 0, 40)
-RecordButton.Position = UDim2.new(0.05, 0, 0.3, 0)
-RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
+RecordButton.Size = UDim2.new(0.4, 0, 0, 50)
+RecordButton.Position = UDim2.new(0.05, 0, 0.05, 0)
+RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0) -- Kırmızı (Kapalı)
 RecordButton.Font = Enum.Font.SourceSansBold
 RecordButton.TextSize = 18
 RecordButton.TextColor3 = Color3.new(1, 1, 1)
-RecordButton.Parent = MF
+RecordButton.Parent = AB
 
 local StopButton = Instance.new("TextButton")
 StopButton.Name = "StopButton"
 StopButton.Text = "STOP"
-StopButton.Size = UDim2.new(0.4, 0, 0, 40)
-StopButton.Position = UDim2.new(0.55, 0, 0.3, 0)
-StopButton.BackgroundColor3 = Color3.new(0.8, 0.8, 0)
+StopButton.Size = UDim2.new(0.4, 0, 0, 50)
+StopButton.Position = UDim2.new(0.55, 0, 0.05, 0)
+StopButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3) -- Gri
 StopButton.Font = Enum.Font.SourceSansBold
 StopButton.TextSize = 18
-StopButton.TextColor3 = Color3.new(0, 0, 0)
-StopButton.Parent = MF
+StopButton.TextColor3 = Color3.new(1, 1, 1)
+StopButton.Parent = AB
 
 local ReplayButton = Instance.new("TextButton")
 ReplayButton.Name = "ReplayButton"
 ReplayButton.Text = "REPLAY"
-ReplayButton.Size = UDim2.new(0.4, 0, 0, 40)
-ReplayButton.Position = UDim2.new(0.05, 0, 0.5, 0)
-ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
+ReplayButton.Size = UDim2.new(0.4, 0, 0, 50)
+ReplayButton.Position = UDim2.new(0.05, 0, 0.35, 0)
+ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0) -- Yeşil (Kapalı)
 ReplayButton.Font = Enum.Font.SourceSansBold
 ReplayButton.TextSize = 18
 ReplayButton.TextColor3 = Color3.new(1, 1, 1)
-ReplayButton.Parent = MF
+ReplayButton.Parent = AB
 
 local ClearButton = Instance.new("TextButton")
 ClearButton.Name = "ClearButton"
 ClearButton.Text = "CLEAR"
-ClearButton.Size = UDim2.new(0.4, 0, 0, 40)
-ClearButton.Position = UDim2.new(0.55, 0, 0.5, 0)
-ClearButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+ClearButton.Size = UDim2.new(0.4, 0, 0, 50)
+ClearButton.Position = UDim2.new(0.55, 0, 0.35, 0)
+ClearButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5) -- Koyu Gri
 ClearButton.Font = Enum.Font.SourceSansBold
 ClearButton.TextSize = 18
 ClearButton.TextColor3 = Color3.new(1, 1, 1)
-ClearButton.Parent = MF
+ClearButton.Parent = AB
 
 -- Functions
 local function updateStatus(text, color)
     StatusLabel.Text = "Status: " .. text
-    StatusLabel.TextColor3 = color or Color3.new(1, 1, 1)
+    StatusLabel.TextColor3 = color or Color3.new(0.8, 0.8, 0.8)
 end
 
 local function recordAction(id, args)
@@ -140,21 +152,21 @@ RecordButton.MouseButton1Click:Connect(function()
     isRecording = true
     recordedActions = {}
     startTime = tick()
-    RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
+    RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0) -- Turuncu (Kayıtta)
     updateStatus("Recording... START!", Color3.new(1, 0, 0))
 end)
 
 StopButton.MouseButton1Click:Connect(function()
     if isRecording then
         isRecording = false
-        RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
-        updateStatus(string.format("Stopped. Ready to Replay. Total Actions: %d", #recordedActions), Color3.new(0, 1, 0))
+        RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0) -- Kırmızı (Hazır)
+        updateStatus(string.format("Stopped Recording. Actions: %d", #recordedActions), Color3.new(0, 1, 0))
     elseif isReplaying then
         isReplaying = false
-        ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
+        ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0) -- Yeşil (Hazır)
         updateStatus("Replay Stopped.", Color3.new(1, 1, 0))
     else
-        updateStatus("Nothing is running.", Color3.new(1, 1, 1))
+        updateStatus("Nothing is running.", Color3.new(0.8, 0.8, 0.8))
     end
 end)
 
@@ -164,7 +176,7 @@ ReplayButton.MouseButton1Click:Connect(function()
     if #recordedActions == 0 then return updateStatus("No actions recorded.", Color3.new(1, 0, 0)) end
     
     isReplaying = true
-    ReplayButton.BackgroundColor3 = Color3.new(0.1, 0.6, 0.1)
+    ReplayButton.BackgroundColor3 = Color3.new(0.1, 0.6, 0.1) -- Koyu Yeşil (Çalışıyor)
     
     task.spawn(function()
         while isReplaying do
@@ -175,24 +187,26 @@ ReplayButton.MouseButton1Click:Connect(function()
                 local timeSinceStart = tick() - replayStartTime
                 local delayTime = action.time - timeSinceStart
                 
-                if delayTime > 0.01 then 
+                if delayTime > 0.01 then
                     task.wait(delayTime)
                 end
                 
-                ClientRequestServer:InvokeServer(action.id, unpack(action.args))
+                -- Aksiyonu tetikle (Hata kontrolü eklendi)
+                local success, result = pcall(ClientRequestServer.InvokeServer, ClientRequestServer, action.id, unpack(action.args))
+                
+                if not success then
+                    updateStatus("Replay Error! Check F9 Console.", Color3.new(1, 0, 0))
+                    isReplaying = false
+                    ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
+                    break
+                end
                 
                 updateStatus(string.format("Replaying: %d/%d (ID: %d)", i, #recordedActions, action.id), Color3.new(0, 1, 0))
             end
             
+            -- Sonsuz döngü için bekleme ve başa dönme
             if isReplaying then
-                 -- Makro bitince, bir sonraki döngüye geçmeden önceki kayıttaki gecikmeyi uygula.
-                 local lastActionTime = recordedActions[#recordedActions].time
-                 local totalElapsed = tick() - replayStartTime
-                 local remainingWait = lastActionTime - (totalElapsed - (tick() - replayStartTime)) -- Yaklaşık gecikme
-                 
-                 if remainingWait > 0.01 then
-                     task.wait(remainingWait)
-                 end
+                task.wait(0.5) -- Yeni döngüye geçmeden kısa bir bekleme
             end
         end
     end)
@@ -201,7 +215,9 @@ end)
 ClearButton.MouseButton1Click:Connect(function()
     if isRecording or isReplaying then return updateStatus("Stop active process first!", Color3.new(1, 1, 0)) end
     recordedActions = {}
-    updateStatus("Cleared. Actions: 0", Color3.new(1, 1, 1))
+    updateStatus("Cleared. Actions: 0", Color3.new(0.8, 0.8, 0.8))
+    RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
+    ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
 end)
 
 -- Kapatma İşlevi
@@ -238,7 +254,6 @@ MinimizedButton.Draggable = true
 MinimizedButton.Visible = false
 MinimizedButton.Parent = SG
 
-local originalFrameSize = MF.Size
 MB.MouseButton1Click:Connect(function()
     isMinimized = true
     MF.Visible = false
