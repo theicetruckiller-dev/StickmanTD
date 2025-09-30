@@ -1,0 +1,252 @@
+local P = game:GetService("Players")
+local RS = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+-- State variables
+local isRunning = true
+local isMinimized = false
+local isRecording = false
+local isReplaying = false
+local recordedActions = {}
+local startTime = 0
+
+-- Makro ID'leri (Sigma Spy'dan alınan veriler)
+local UNIT_PLACE_ID = 200007
+local UPGRADE_SELL_ID = 200009
+local START_WAVE_ID = 7
+local RESTART_ID = 2000093 
+
+local LP = P.LocalPlayer
+local ClientRequestServer = RS.RemoteFunction:WaitForChild("clientRequestServer")
+
+-- GUI Setup
+local SG = Instance.new("ScreenGui")
+SG.Name = "MacroGUI"
+SG.ResetOnSpawn = false
+-- BURASI DÜZELTİLDİ: CoreGui'ye doğrudan atama yapılıyor.
+SG.Parent = game:GetService("CoreGui") 
+
+local MF = Instance.new("Frame")
+MF.Name = "MainFrame"
+MF.Size = UDim2.new(0, 320, 0, 250)
+MF.Position = UDim2.new(0.5, -160, 0.5, -125)
+MF.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+MF.BorderSizePixel = 0
+MF.Active = true
+MF.Draggable = true
+MF.Parent = SG
+
+local TL = Instance.new("TextLabel")
+TL.Text = "Stickman TD Macro"
+TL.Size = UDim2.new(1, 0, 0, 30)
+TL.Position = UDim2.new(0, 0, 0, 0)
+TL.Font = Enum.Font.SourceSansBold
+TL.TextSize = 18
+TL.TextColor3 = Color3.new(1, 1, 1)
+TL.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+TL.Parent = MF
+
+-- Status Label
+local StatusLabel = Instance.new("TextLabel")
+StatusLabel.Name = "StatusLabel"
+StatusLabel.Text = "Status: Ready"
+StatusLabel.Size = UDim2.new(0.9, 0, 0, 20)
+StatusLabel.Position = UDim2.new(0.05, 0, 0.15, 0)
+StatusLabel.Font = Enum.Font.SourceSans
+StatusLabel.TextSize = 14
+StatusLabel.TextColor3 = Color3.new(1, 1, 1)
+StatusLabel.BackgroundTransparency = 1
+StatusLabel.Parent = MF
+
+-- Buttons
+local RecordButton = Instance.new("TextButton")
+RecordButton.Name = "RecordButton"
+RecordButton.Text = "RECORD"
+RecordButton.Size = UDim2.new(0.4, 0, 0, 40)
+RecordButton.Position = UDim2.new(0.05, 0, 0.3, 0)
+RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
+RecordButton.Font = Enum.Font.SourceSansBold
+RecordButton.TextSize = 18
+RecordButton.TextColor3 = Color3.new(1, 1, 1)
+RecordButton.Parent = MF
+
+local StopButton = Instance.new("TextButton")
+StopButton.Name = "StopButton"
+StopButton.Text = "STOP"
+StopButton.Size = UDim2.new(0.4, 0, 0, 40)
+StopButton.Position = UDim2.new(0.55, 0, 0.3, 0)
+StopButton.BackgroundColor3 = Color3.new(0.8, 0.8, 0)
+StopButton.Font = Enum.Font.SourceSansBold
+StopButton.TextSize = 18
+StopButton.TextColor3 = Color3.new(0, 0, 0)
+StopButton.Parent = MF
+
+local ReplayButton = Instance.new("TextButton")
+ReplayButton.Name = "ReplayButton"
+ReplayButton.Text = "REPLAY"
+ReplayButton.Size = UDim2.new(0.4, 0, 0, 40)
+ReplayButton.Position = UDim2.new(0.05, 0, 0.5, 0)
+ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
+ReplayButton.Font = Enum.Font.SourceSansBold
+ReplayButton.TextSize = 18
+ReplayButton.TextColor3 = Color3.new(1, 1, 1)
+ReplayButton.Parent = MF
+
+local ClearButton = Instance.new("TextButton")
+ClearButton.Name = "ClearButton"
+ClearButton.Text = "CLEAR"
+ClearButton.Size = UDim2.new(0.4, 0, 0, 40)
+ClearButton.Position = UDim2.new(0.55, 0, 0.5, 0)
+ClearButton.BackgroundColor3 = Color3.new(0.3, 0.3, 0.3)
+ClearButton.Font = Enum.Font.SourceSansBold
+ClearButton.TextSize = 18
+ClearButton.TextColor3 = Color3.new(1, 1, 1)
+ClearButton.Parent = MF
+
+-- Functions
+local function updateStatus(text, color)
+    StatusLabel.Text = "Status: " .. text
+    StatusLabel.TextColor3 = color or Color3.new(1, 1, 1)
+end
+
+local function recordAction(id, args)
+    local timestamp = tick() - startTime
+    local action = {
+        time = timestamp,
+        id = id,
+        args = args
+    }
+    table.insert(recordedActions, action)
+    updateStatus(string.format("Recording... Actions: %d", #recordedActions), Color3.new(1, 0, 0))
+end
+
+-- Hook the RemoteFunction to record actions
+local originalInvokeServer = ClientRequestServer.InvokeServer
+ClientRequestServer.InvokeServer = function(self, id, ...)
+    local args = {...}
+    
+    if isRecording and (id == UNIT_PLACE_ID or id == UPGRADE_SELL_ID or id == START_WAVE_ID or id == RESTART_ID) then
+        recordAction(id, args)
+    end
+    
+    return originalInvokeServer(self, id, unpack(args))
+end
+
+-- Button Connections
+RecordButton.MouseButton1Click:Connect(function()
+    if isReplaying then return updateStatus("Stop Replay first!", Color3.new(1, 1, 0)) end
+    if isRecording then return end
+    
+    isRecording = true
+    recordedActions = {}
+    startTime = tick()
+    RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
+    updateStatus("Recording... START!", Color3.new(1, 0, 0))
+end)
+
+StopButton.MouseButton1Click:Connect(function()
+    if isRecording then
+        isRecording = false
+        RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
+        updateStatus(string.format("Stopped. Ready to Replay. Total Actions: %d", #recordedActions), Color3.new(0, 1, 0))
+    elseif isReplaying then
+        isReplaying = false
+        ReplayButton.BackgroundColor3 = Color3.new(0, 0.7, 0)
+        updateStatus("Replay Stopped.", Color3.new(1, 1, 0))
+    else
+        updateStatus("Nothing is running.", Color3.new(1, 1, 1))
+    end
+end)
+
+ReplayButton.MouseButton1Click:Connect(function()
+    if isRecording then return updateStatus("Stop Recording first!", Color3.new(1, 1, 0)) end
+    if isReplaying then return updateStatus("Replay is already running.", Color3.new(1, 1, 0)) end
+    if #recordedActions == 0 then return updateStatus("No actions recorded.", Color3.new(1, 0, 0)) end
+    
+    isReplaying = true
+    ReplayButton.BackgroundColor3 = Color3.new(0.1, 0.6, 0.1)
+    
+    task.spawn(function()
+        while isReplaying do
+            local replayStartTime = tick()
+            for i, action in ipairs(recordedActions) do
+                if not isReplaying then break end
+                
+                local timeSinceStart = tick() - replayStartTime
+                local delayTime = action.time - timeSinceStart
+                
+                if delayTime > 0.01 then 
+                    task.wait(delayTime)
+                end
+                
+                ClientRequestServer:InvokeServer(action.id, unpack(action.args))
+                
+                updateStatus(string.format("Replaying: %d/%d (ID: %d)", i, #recordedActions, action.id), Color3.new(0, 1, 0))
+            end
+            
+            if isReplaying then
+                 -- Makro bitince, bir sonraki döngüye geçmeden önceki kayıttaki gecikmeyi uygula.
+                 local lastActionTime = recordedActions[#recordedActions].time
+                 local totalElapsed = tick() - replayStartTime
+                 local remainingWait = lastActionTime - (totalElapsed - (tick() - replayStartTime)) -- Yaklaşık gecikme
+                 
+                 if remainingWait > 0.01 then
+                     task.wait(remainingWait)
+                 end
+            end
+        end
+    end)
+end)
+
+ClearButton.MouseButton1Click:Connect(function()
+    if isRecording or isReplaying then return updateStatus("Stop active process first!", Color3.new(1, 1, 0)) end
+    recordedActions = {}
+    updateStatus("Cleared. Actions: 0", Color3.new(1, 1, 1))
+end)
+
+-- Kapatma İşlevi
+local CloseButton = Instance.new("TextButton")
+CloseButton.Name = "CloseButton"
+CloseButton.Size = UDim2.new(0, 30, 1, 0)
+CloseButton.Position = UDim2.new(1, -30, 0, 0)
+CloseButton.Text = "X"
+CloseButton.Font = Enum.Font.SourceSansBold
+CloseButton.TextSize = 25
+CloseButton.TextColor3 = Color3.new(1, 1, 1)
+CloseButton.BackgroundColor3 = Color3.new(0.9, 0, 0)
+CloseButton.Parent = TB
+
+CloseButton.MouseButton1Click:Connect(function()
+    isRecording = false
+    isReplaying = false
+    isRunning = false
+    SG:Destroy()
+end)
+
+-- Minimize İşlevi
+local MinimizedButton = Instance.new("TextButton")
+MinimizedButton.Name = "MinimizedButton"
+MinimizedButton.Size = UDim2.new(0, 50, 0, 30)
+MinimizedButton.Position = UDim2.new(0, 5, 0.95, -35)
+MinimizedButton.Text = "Macro"
+MinimizedButton.Font = Enum.Font.SourceSansBold
+MinimizedButton.TextSize = 18
+MinimizedButton.TextColor3 = Color3.new(1, 1, 1)
+MinimizedButton.BackgroundTransparency = 0.5
+MinimizedButton.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+MinimizedButton.Draggable = true
+MinimizedButton.Visible = false
+MinimizedButton.Parent = SG
+
+local originalFrameSize = MF.Size
+MB.MouseButton1Click:Connect(function()
+    isMinimized = true
+    MF.Visible = false
+    MinimizedButton.Visible = true
+end)
+
+MinimizedButton.MouseButton1Click:Connect(function()
+    isMinimized = false
+    MF.Visible = true
+    MinimizedButton.Visible = false
+end)
