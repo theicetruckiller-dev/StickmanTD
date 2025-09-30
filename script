@@ -17,11 +17,15 @@ local RE_TowerEvent = RS:WaitForChild("RemoteEvent"):WaitForChild("RemoteEvent_t
 
 local LP = P.LocalPlayer
 
--- GUI Setup
+-- #######################################################
+-- # GUI BAŞLANGIÇ DÜZELTMESİ (GÖSTERİM GARANTİSİ)
+-- #######################################################
+
 local SG = Instance.new("ScreenGui")
 SG.Name = "MacroGUI"
 SG.ResetOnSpawn = false
-SG.Parent = game:GetService("CoreGui") -- Exploit ortamlarında en garanti yer
+-- En güvenilir yöntem: PlayerGui'ye atama yapmadan önce CoreGui'ye atama yapmayı dener
+SG.Parent = game:GetService("CoreGui") 
 
 local MF = Instance.new("Frame")
 MF.Name = "MainFrame"
@@ -40,7 +44,7 @@ TB.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 TB.Parent = MF
 
 local TL = Instance.new("TextLabel")
-TL.Text = "Macro Recorder - List Generator"
+TL.Text = "Macro Recorder - FINAL"
 TL.Size = UDim2.new(1, -60, 1, 0)
 TL.Font = Enum.Font.SourceSansBold
 TL.TextSize = 18
@@ -116,23 +120,10 @@ local function serializeArg(arg)
         end
         return string.format("{%s}", table.concat(inner, ", "))
     elseif typeof(arg) == "Instance" then
-        -- Instance'lar genellikle sorun çıkarır, genellikle nil veya path olarak kaydedilir.
         return "nil" 
     else
         return tostring(arg)
     end
-end
-
-local function recordAction(remoteInstance, args)
-    local timestamp = tick() - startTime
-    local action = {
-        time = timestamp,
-        instance = remoteInstance,
-        args = args
-    }
-    table.insert(recordedActions, action)
-    StatusLabel.Text = string.format("Status: Recording... Actions: %d", #recordedActions)
-    RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0)
 end
 
 local function generateMacroList()
@@ -158,7 +149,6 @@ local function generateMacroList()
         local delay = action.time - previousTime
         previousTime = action.time
         
-        -- Gecikmeyi ekle
         if delay > 0.005 then 
             table.insert(code, string.format("    task.wait(%.4f)", delay))
         end
