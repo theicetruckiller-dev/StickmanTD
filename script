@@ -1,13 +1,21 @@
 -- ================================================================= --
---         Stickman TD - Failsafe Automatic Player v3                --
+--         Stickman TD - Final Bulletproof Player v5                 --
 -- ================================================================= --
 
-task.wait(1) -- Oyunun tamamen yüklenmesi için güvenli bekleme
+wait(1)
 
 -- ================================================================= --
---                             GUI CODE (ÖNCELİKLİ)                    --
+--                             GUI CODE                              --
 -- ================================================================= --
 
+-- Servisler
+local CoreGui = game:GetService("CoreGui")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local HttpService = game:GetService("HttpService")
+
+-- Ana Arayüz
 local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = "StickmanTD_GUI"; ScreenGui.Parent = CoreGui; ScreenGui.ResetOnSpawn = false
 local MainFrame = Instance.new("Frame"); MainFrame.Name = "MainFrame"; MainFrame.Size = UDim2.new(0, 280, 0, 220); MainFrame.Position = UDim2.new(0.5, -140, 0.5, -110); MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45); MainFrame.BorderSizePixel = 0; MainFrame.Active = true; MainFrame.Draggable = true; MainFrame.Parent = ScreenGui
 local UICorner = Instance.new("UICorner"); UICorner.CornerRadius = UDim.new(0, 8); UICorner.Parent = MainFrame
@@ -30,22 +38,12 @@ local ToggleCorner = Instance.new("UICorner"); ToggleCorner.CornerRadius = UDim.
 local MinimizedButton = Instance.new("TextButton"); MinimizedButton.Name = "MinimizedButton"; MinimizedButton.Size = UDim2.new(0, 60, 0, 35); MinimizedButton.Position = UDim2.new(0, 20, 0.5, 0); MinimizedButton.Text = "MACRO"; MinimizedButton.Font = Enum.Font.SourceSansBold; MinimizedButton.TextSize = 18; MinimizedButton.TextColor3 = Color3.fromRGB(255, 255, 255); MinimizedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60); MinimizedButton.BackgroundTransparency = 0.3; MinimizedButton.Draggable = true; MinimizedButton.Active = true; MinimizedButton.Visible = false; MinimizedButton.ZIndex = 5; MinimizedButton.Parent = ScreenGui
 local MinimizedCorner = Instance.new("UICorner"); MinimizedCorner.CornerRadius = UDim.new(0, 8); MinimizedCorner.Parent = MinimizedButton
 
--- Roblox Services
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local Players = game:GetService("Players")
-local Workspace = game:GetService("Workspace")
-local HttpService = game:GetService("HttpService")
-
--- RemoteFunctions
-local RF_ClientRequestServer = ReplicatedStorage.RemoteFunction:WaitForChild("clientRequestServer")
-local RF_Voting = ReplicatedStorage.RemoteFunction:WaitForChild("RemoteFunction_Voting")
-
 -- ================================================================= --
 --                          MACRO LIST                               --
 -- ================================================================= --
 
 local Macros = {
-    ["Fully Automatic Farm"] = function(difficulty)
+    ["Fully Automatic Farm"] = function(difficulty, RF_ClientRequestServer, RF_Voting) -- Remote'ları parametre olarak al
         local isMacroRunning = true
         local initialUnitsPlaced = false
         local UPGRADE_PHASE_DURATION = 75 
@@ -54,11 +52,11 @@ local Macros = {
         while isMacroRunning do
             if not initialUnitsPlaced and #Workspace.PlaceHero:GetChildren() < 5 then
                 print("Phase 1: Placing initial units...")
-                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)}); task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)}); task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)}); task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)}); task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)}); task.wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)}); wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)}); wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)}); wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)}); wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)}); wait(1)
                 initialUnitsPlaced = true
             end
 
@@ -75,27 +73,23 @@ local Macros = {
                             local success, data = pcall(HttpService.JSONDecode, HttpService, dataValue.Value)
                             if success and data and data.SelectHeroName and data.id then
                                 RF_ClientRequestServer:InvokeServer(200009, {data.SelectHeroName, tonumber(data.id) + 1})
-                                task.wait(0.1)
+                                wait(0.1)
                             end
                         end
                     end
                 end
-                task.wait(1) 
+                wait(1) 
             end
             
             if not isMacroRunning then break end
-
             print("Phase 3: Selecting Difficulty '"..difficulty.."'...")
             RF_Voting:InvokeServer("DifficultyVoting", difficulty)
-            
             print("Phase 4: Battle...")
-            task.wait(BATTLE_PHASE_DURATION)
-            
+            wait(BATTLE_PHASE_DURATION)
             if not isMacroRunning then break end
-
             print("Phase 5: Restarting match...")
             RF_ClientRequestServer:InvokeServer(8, {"SkipWave", "OFF"})
-            task.wait(5)
+            wait(5)
         end
     end,
 }
@@ -135,13 +129,28 @@ function ToggleMacro()
         ToggleButton.Text = "OFF"; ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
     else
         if selectedMacroName and Macros[selectedMacroName] then
+            -- Sadece makro başlayacağı zaman Remote'ları ara
+            print("Finding RemoteFunctions...")
+            local RF_ClientRequestServer = ReplicatedStorage.RemoteFunction:FindFirstChild("clientRequestServer")
+            local RF_Voting = ReplicatedStorage.RemoteFunction:FindFirstChild("RemoteFunction_Voting")
+
+            if not RF_ClientRequestServer or not RF_Voting then
+                warn("ERROR: Critical RemoteFunctions not found! Macro cannot start.")
+                ToggleButton.Text = "ERROR"
+                task.wait(2)
+                ToggleButton.Text = "OFF"
+                return
+            end
+            print("Remotes found successfully!")
+
             local difficulty = math.clamp(tonumber(DifficultyInput.Text) or 1, 1, 7)
             DifficultyInput.Text = tostring(difficulty)
             
             isMacroRunning = true
             ToggleButton.Text = "ON"; ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
             currentMacroThread = task.spawn(function()
-                local success, err = pcall(Macros[selectedMacroName], difficulty)
+                -- Makro fonksiyonuna bulunan Remote'ları parametre olarak gönder
+                local success, err = pcall(Macros[selectedMacroName], difficulty, RF_ClientRequestServer, RF_Voting)
                 if not success then
                     warn("Error while running macro:", err)
                     isMacroRunning = false
@@ -150,7 +159,7 @@ function ToggleMacro()
             end)
         else
             ToggleButton.Text = "SELECT MACRO!"
-            task.wait(1)
+            wait(1)
             if not isMacroRunning then ToggleButton.Text = "OFF" end
         end
     end
@@ -167,4 +176,4 @@ ToggleButton.MouseButton1Click:Connect(ToggleMacro)
 MinimizeButton.MouseButton1Click:Connect(ToggleMinimize)
 MinimizedButton.MouseButton1Click:Connect(ToggleMinimize)
 
-print("Stickman TD Final Player (Failsafe) loaded successfully.")
+print("Stickman TD Final Player (Bulletproof) loaded successfully.")
