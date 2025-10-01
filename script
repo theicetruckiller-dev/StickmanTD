@@ -6,6 +6,7 @@
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
+local Workspace = game:GetService("Workspace")
 
 -- RemoteFunction
 local RF_ClientRequestServer = ReplicatedStorage:WaitForChild("RemoteFunction"):WaitForChild("clientRequestServer")
@@ -15,85 +16,69 @@ local RF_ClientRequestServer = ReplicatedStorage:WaitForChild("RemoteFunction"):
 -- ================================================================= --
 
 local Macros = {
-    ["Unit Placement & Upgrades"] = function()
+    ["Smart Auto-Farm"] = function()
         local isMacroRunning = true
+        
+        -- Bu değişken, başlangıç ünitelerinin sadece bir kere yerleştirilmesini sağlar.
+        local initialUnitsPlaced = false
+
         while isMacroRunning do
-            -- Call 1
-            RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)})
-            task.wait(5.407)
-
-            -- Call 2
-            RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)})
-            task.wait(22.053)
-
-            -- Call 3
-            RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)})
-            task.wait(15.301)
-
-            -- Call 4
-            RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)})
-            task.wait(6.39)
-
-            -- Call 5
-            RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)})
-            task.wait(9.716)
-
-            -- Call 6 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
-            task.wait(11.281)
-
-            -- Call 7 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2191})
-            task.wait(15.288)
-
-            -- Call 8 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_9658dfaa-339e-4161-8447-df15e1e374ef",2191})
-            task.wait(16.895)
-
-            -- Call 9 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"3_GardenTDtrade_1071_29e33363-2dd6-43bc-bab0-179018194b05",1071})
-            task.wait(19.761)
-
-            -- Call 10 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"3_GardenTDtrade_1071_29e33363-2dd6-43bc-bab0-179018194b05",1072})
-            task.wait(20.346)
-
-            -- Call 11 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
-            task.wait(1.009)
-
-            -- Call 12 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
-            task.wait(1.178)
-
-            -- Call 13 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
-            task.wait(14.028)
-
-            -- Call 14 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2191})
-            task.wait(14.655)
-
-            -- Call 15 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_9658dfaa-339e-4161-8447-df15e1e374ef",2191})
-            task.wait(25.758)
-
-            -- Call 16 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2191})
-            task.wait(28.282)
             
-            -- Call 17 (Upgrade)
-            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2192})
+            -- === FAZ 1: BAŞLANGIÇ ÜNİTELERİNİ YERLEŞTİRME (Sadece ilk döngüde çalışır) ===
+            if not initialUnitsPlaced then
+                print("Phase 1: Placing initial units for the first time...")
+                -- Eski loglardaki statik yerleştirme verilerini kullanıyoruz
+                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)})
+                task.wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)})
+                task.wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)})
+                task.wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)})
+                task.wait(1)
+                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)})
+                task.wait(1)
+                initialUnitsPlaced = true
+                print("Initial units placed.")
+            end
 
-            task.wait(3)
-        end
-    end,
-    
-    ["Example Macro 2 (Fast Cash)"] = function()
-        local isMacroRunning = true
-        while isMacroRunning do
-            print("Example Macro 2 is running...")
-            task.wait(1)
+            -- === FAZ 2: AKILLI YÜKSELTME (Sürekli çalışır) ===
+            print("Phase 2: Smartly upgrading all available units...")
+            local unitsFolder = Workspace:WaitForChild("Hero")
+
+            if unitsFolder then
+                for i, unit in ipairs(unitsFolder:GetChildren()) do
+                    if unit:IsA("Model") then
+                        -- Hem Attribute hem de Value objesi olarak arama yap (garanti olsun diye)
+                        local uuidValue = unit:GetAttribute("UniqueId") or (unit:FindFirstChild("UniqueId") and unit:FindFirstChild("UniqueId").Value)
+                        local pidValue = unit:GetAttribute("PID") or (unit:FindFirstChild("PID") and unit:FindFirstChild("PID").Value)
+
+                        if uuidValue and pidValue then
+                            -- Sonraki seviye ID'sini hesaplıyoruz (PID + 1)
+                            local nextUpgradeID = tonumber(pidValue) + 1
+                            
+                            print("Found unit "..unit.Name.." (PID: "..pidValue..") with UUID. Upgrading to "..nextUpgradeID)
+                            RF_ClientRequestServer:InvokeServer(200009, {uuidValue, nextUpgradeID})
+                            
+                            -- Sunucuyu yormamak ve insansı görünmek için küçük bekleme
+                            task.wait(0.2 + math.random()/5) 
+                        end
+                    end
+                end
+            end
+            
+            -- === FAZ 3: DALGAYI BAŞLATMA VE BEKLEME ===
+            print("Phase 3: Starting Wave...")
+            RF_ClientRequestServer:InvokeServer(7)
+            
+            print("Waiting for round to end...")
+            -- !! DİKKAT: BU SÜREYİ BİR TURUN ORTALAMA NE KADAR SÜRDÜĞÜNE GÖRE AYARLA !!
+            task.wait(90) 
+            
+            -- === FAZ 4: MAÇI YENİDEN BAŞLATMA ===
+            print("Phase 4: Restarting match...")
+            RF_ClientRequestServer:InvokeServer(2000093, {false})
+            task.wait(5) -- Yeni tur yüklenmesi için bekle
         end
     end,
 }
@@ -101,6 +86,7 @@ local Macros = {
 -- ================================================================= --
 --                             GUI CODE                              --
 -- ================================================================= --
+-- (Bu kısım öncekiyle aynı, değişiklik yok)
 
 local selectedMacroName = nil
 local isMacroRunning = false
@@ -130,6 +116,7 @@ TitleBar.Name = "TitleBar"
 TitleBar.Size = UDim2.new(1, 0, 0, 30)
 TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
 TitleBar.BorderSizePixel = 0
+TitleBar.ZIndex = 2 
 TitleBar.Parent = MainFrame
 
 local TitleCorner = Instance.new("UICorner")
@@ -146,6 +133,7 @@ TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 TitleLabel.BackgroundTransparency = 1
 TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
 TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.ZIndex = 2 
 TitleLabel.Parent = TitleBar
 
 local MinimizeButton = Instance.new("TextButton")
@@ -157,6 +145,7 @@ MinimizeButton.Font = Enum.Font.SourceSansBold
 MinimizeButton.TextSize = 24
 MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
 MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.ZIndex = 2
 MinimizeButton.Parent = TitleBar
 
 local DropdownFrame = Instance.new("Frame")
@@ -166,6 +155,7 @@ DropdownFrame.Position = UDim2.new(0.5, -120, 0, 50)
 DropdownFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 DropdownFrame.BorderSizePixel = 1
 DropdownFrame.BorderColor3 = Color3.fromRGB(80, 80, 90)
+DropdownFrame.ZIndex = 2
 DropdownFrame.Parent = MainFrame
 
 local DropdownCorner = Instance.new("UICorner")
@@ -181,7 +171,7 @@ DropdownLabel.TextSize = 16
 DropdownLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
 DropdownLabel.BackgroundTransparency = 1
 DropdownLabel.Position = UDim2.new(0, 10, 0, 0)
-DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+DropdownLabel.ZIndex = 2
 DropdownLabel.Parent = DropdownFrame
 
 local DropdownButton = Instance.new("TextButton")
@@ -189,7 +179,7 @@ DropdownButton.Name = "DropdownButton"
 DropdownButton.Size = UDim2.new(1, 0, 1, 0)
 DropdownButton.Text = ""
 DropdownButton.BackgroundTransparency = 1
-DropdownButton.ZIndex = 2
+DropdownButton.ZIndex = 3
 DropdownButton.Parent = DropdownFrame
 
 local DropdownArrow = Instance.new("TextLabel")
@@ -200,19 +190,20 @@ DropdownArrow.Font = Enum.Font.SourceSans
 DropdownArrow.TextSize = 16
 DropdownArrow.TextColor3 = Color3.fromRGB(220, 220, 220)
 DropdownArrow.BackgroundTransparency = 1
+DropdownArrow.ZIndex = 2
 DropdownArrow.Parent = DropdownFrame
 
 local OptionsList = Instance.new("ScrollingFrame")
 OptionsList.Name = "OptionsList"
 OptionsList.Size = UDim2.new(0, 240, 0, 0)
-OptionsList.Position = UDim2.new(0.5, -120, 0, 85) -- Düzeltilmiş pozisyon
+OptionsList.Position = UDim2.new(0.5, -120, 0, 85)
 OptionsList.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 OptionsList.BorderSizePixel = 1
 OptionsList.BorderColor3 = Color3.fromRGB(80, 80, 90)
 OptionsList.BackgroundTransparency = 0.1
 OptionsList.Visible = false
-OptionsList.ZIndex = 3 -- Diğer her şeyin üzerinde görünmesi için
-OptionsList.Parent = MainFrame -- Düzeltilmiş Parent
+OptionsList.ZIndex = 4
+OptionsList.Parent = MainFrame
 
 local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.Padding = UDim.new(0, 2)
@@ -228,6 +219,7 @@ ToggleButton.Font = Enum.Font.SourceSansBold
 ToggleButton.TextSize = 20
 ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ToggleButton.ZIndex = 1
 ToggleButton.Parent = MainFrame
 
 local ToggleCorner = Instance.new("UICorner")
@@ -247,6 +239,7 @@ MinimizedButton.BackgroundTransparency = 0.3
 MinimizedButton.Draggable = true
 MinimizedButton.Active = true
 MinimizedButton.Visible = false
+MinimizedButton.ZIndex = 5
 MinimizedButton.Parent = ScreenGui
 
 local MinimizedCorner = Instance.new("UICorner")
@@ -281,6 +274,7 @@ for macroName, _ in pairs(Macros) do
     optionButton.TextSize = 15
     optionButton.TextColor3 = Color3.fromRGB(200, 200, 200)
     optionButton.BackgroundTransparency = 1
+    optionButton.ZIndex = 5
     optionButton.Parent = OptionsList
     
     optionButton.MouseButton1Click:Connect(function()
