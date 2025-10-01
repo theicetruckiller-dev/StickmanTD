@@ -1,5 +1,5 @@
 -- ================================================================= --
---              Stickman TD Macro Player (DEBUG VERSION)             --
+--         Stickman TD - Ultimate Player w/ Record & Save            --
 -- ================================================================= --
 
 -- Roblox Services
@@ -8,337 +8,262 @@ local Players = game:GetService("Players")
 local CoreGui = game:GetService("CoreGui")
 local Workspace = game:GetService("Workspace")
 
--- RemoteFunction
-local RF_ClientRequestServer = ReplicatedStorage:WaitForChild("RemoteFunction"):WaitForChild("clientRequestServer")
+-- RemoteFunctions
+local RF_ClientRequestServer = ReplicatedStorage.RemoteFunction:WaitForChild("clientRequestServer")
+local RF_Voting = ReplicatedStorage.RemoteFunction:WaitForChild("RemoteFunction_Voting")
+
+-- Script State
+local isRecording = false
+local recordedActions = {}
+local recordingStartTime = 0
 
 -- ================================================================= --
 --                          MACRO LIST                               --
 -- ================================================================= --
 
 local Macros = {
-    ["Smart Auto-Farm"] = function()
-        local isMacroRunning = true
-        local initialUnitsPlaced = false
-
+    ["Fully Automatic Farm"] = function(difficulty)
+        -- (Bu makro öncekiyle aynı, tam otomatik çalışır)
+        local isMacroRunning = true; local initialUnitsPlaced = false
+        local UPGRADE_PHASE_DURATION = 75; local BATTLE_PHASE_DURATION = 120
         while isMacroRunning do
             if not initialUnitsPlaced then
-                print("Phase 1: Placing initial units for the first time...")
-                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)})
-                task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)})
-                task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)})
-                task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)})
-                task.wait(1)
-                RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)})
-                task.wait(1)
-                initialUnitsPlaced = true
-                print("Initial units placed.")
+                print("Phase 1: Placing initial units..."); RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)}); task.wait(1); RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)}); task.wait(1); RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)}); task.wait(1); RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)}); task.wait(1); RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)}); task.wait(1); initialUnitsPlaced = true
             end
-
-            -- ################################################################## --
-            -- #                        DEBUG BÖLÜMÜ                          # --
-            -- ################################################################## --
-            print("Phase 2: Smartly upgrading all available units...")
-            local unitsFolder = Workspace:WaitForChild("Hero")
-
-            if unitsFolder then
-                print("SUCCESS: Found 'Hero' folder in workspace.")
-                if #unitsFolder:GetChildren() == 0 then
-                    print("WARNING: 'Hero' folder is empty. No units to upgrade.")
-                end
-
-                for i, unit in ipairs(unitsFolder:GetChildren()) do
-                    if unit:IsA("Model") then
-                        print("-------------------------------------------------")
-                        print("Scanning unit: " .. unit.Name)
-
-                        local uuidValue = unit:GetAttribute("UniqueId") or (unit:FindFirstChild("UniqueId") and unit:FindFirstChild("UniqueId").Value)
-                        local pidValue = unit:GetAttribute("PID") or (unit:FindFirstChild("PID") and unit:FindFirstChild("PID").Value)
-
-                        print("...Searching for 'UniqueId'. Found: " .. tostring(uuidValue))
-                        print("...Searching for 'PID'. Found: " .. tostring(pidValue))
-
-                        if uuidValue and pidValue then
-                            local nextUpgradeID = tonumber(pidValue) + 1
-                            print("SUCCESS: All data found. Attempting to upgrade PID "..tostring(pidValue).." to "..tostring(nextUpgradeID))
-                            
-                            -- Hata kontrolü için pcall içine alalım
-                            local success, err = pcall(function()
-                                RF_ClientRequestServer:InvokeServer(200009, {uuidValue, nextUpgradeID})
-                            end)
-                            
-                            if not success then
-                                print("ERROR: InvokeServer failed! Reason: "..tostring(err))
-                            end
-
-                        else
-                            print("FAILURE: Could not find required data (UniqueId or PID). Skipping upgrade for this unit.")
+            local upgradePhaseEndTime = tick() + UPGRADE_PHASE_DURATION
+            while tick() < upgradePhaseEndTime and isMacroRunning do
+                local unitsFolder = Workspace:FindFirstChild("Hero")
+                if unitsFolder then
+                    for i, unit in ipairs(unitsFolder:GetChildren()) do
+                        if unit:IsA("Model") then
+                            local uuidValue = unit:GetAttribute("UniqueId") or (unit:FindFirstChild("UniqueId") and unit:FindFirstChild("UniqueId").Value); local pidValue = unit:GetAttribute("PID") or (unit:FindFirstChild("PID") and unit:FindFirstChild("PID").Value)
+                            if uuidValue and pidValue then local nextUpgradeID = tonumber(pidValue) + 1; RF_ClientRequestServer:InvokeServer(200009, {uuidValue, nextUpgradeID}); task.wait(0.2) end
                         end
                     end
-                end
-            else
-                print("ERROR: Could not find 'Hero' folder in workspace!")
+                end; task.wait(1) 
             end
-            
-            print("-------------------------------------------------")
-            print("Phase 3: Starting Wave...")
-            RF_ClientRequestServer:InvokeServer(7)
-            
-            print("Waiting for round to end...")
-            task.wait(90) 
-            
-            print("Phase 4: Restarting match...")
-            RF_ClientRequestServer:InvokeServer(2000093, {false})
-            task.wait(5)
+            if not isMacroRunning then break end
+            print("Phase 3: Selecting Difficulty '"..difficulty.."'..."); RF_Voting:InvokeServer("DifficultyVoting", difficulty)
+            print("Phase 4: Battle..."); task.wait(BATTLE_PHASE_DURATION)
+            if not isMacroRunning then break end
+            print("Phase 5: Restarting match..."); RF_ClientRequestServer:InvokeServer(8, {"SkipWave", "OFF"}); task.wait(5)
         end
     end,
 }
 
 -- ================================================================= --
---                             GUI CODE                              --
--- ================================================================= --
--- (GUI KODU DEĞİŞMEDİ)
-
-local selectedMacroName = nil
-local isMacroRunning = false
-local currentMacroThread = nil
-
-local ScreenGui = Instance.new("ScreenGui")
-ScreenGui.Name = "StickmanTD_GUI"
-ScreenGui.Parent = CoreGui
-ScreenGui.ResetOnSpawn = false
-
-local MainFrame = Instance.new("Frame")
-MainFrame.Name = "MainFrame"
-MainFrame.Size = UDim2.new(0, 280, 0, 180)
-MainFrame.Position = UDim2.new(0.5, -140, 0.5, -90)
-MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
-MainFrame.BorderSizePixel = 0
-MainFrame.Active = true
-MainFrame.Draggable = true
-MainFrame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 8)
-UICorner.Parent = MainFrame
-
-local TitleBar = Instance.new("Frame")
-TitleBar.Name = "TitleBar"
-TitleBar.Size = UDim2.new(1, 0, 0, 30)
-TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-TitleBar.BorderSizePixel = 0
-TitleBar.ZIndex = 2 
-TitleBar.Parent = MainFrame
-
-local TitleCorner = Instance.new("UICorner")
-TitleCorner.CornerRadius = UDim.new(0, 8)
-TitleCorner.Parent = TitleBar
-
-local TitleLabel = Instance.new("TextLabel")
-TitleLabel.Name = "TitleLabel"
-TitleLabel.Size = UDim2.new(1, -35, 1, 0)
-TitleLabel.Text = "Stickman TD Player"
-TitleLabel.Font = Enum.Font.SourceSansBold
-TitleLabel.TextSize = 16
-TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-TitleLabel.BackgroundTransparency = 1
-TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
-TitleLabel.Position = UDim2.new(0, 10, 0, 0)
-TitleLabel.ZIndex = 2 
-TitleLabel.Parent = TitleBar
-
-local MinimizeButton = Instance.new("TextButton")
-MinimizeButton.Name = "MinimizeButton"
-MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
-MinimizeButton.Position = UDim2.new(1, -30, 0, 0)
-MinimizeButton.Text = "–"
-MinimizeButton.Font = Enum.Font.SourceSansBold
-MinimizeButton.TextSize = 24
-MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-MinimizeButton.BackgroundTransparency = 1
-MinimizeButton.ZIndex = 2
-MinimizeButton.Parent = TitleBar
-
-local DropdownFrame = Instance.new("Frame")
-DropdownFrame.Name = "DropdownFrame"
-DropdownFrame.Size = UDim2.new(0, 240, 0, 35)
-DropdownFrame.Position = UDim2.new(0.5, -120, 0, 50)
-DropdownFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-DropdownFrame.BorderSizePixel = 1
-DropdownFrame.BorderColor3 = Color3.fromRGB(80, 80, 90)
-DropdownFrame.ZIndex = 2
-DropdownFrame.Parent = MainFrame
-
-local DropdownCorner = Instance.new("UICorner")
-DropdownCorner.CornerRadius = UDim.new(0, 6)
-DropdownCorner.Parent = DropdownFrame
-
-local DropdownLabel = Instance.new("TextLabel")
-DropdownLabel.Name = "DropdownLabel"
-DropdownLabel.Size = UDim2.new(1, -30, 1, 0)
-DropdownLabel.Text = "Select Macro..."
-DropdownLabel.Font = Enum.Font.SourceSans
-DropdownLabel.TextSize = 16
-DropdownLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
-DropdownLabel.BackgroundTransparency = 1
-DropdownLabel.Position = UDim2.new(0, 10, 0, 0)
-DropdownLabel.ZIndex = 2
-DropdownLabel.Parent = DropdownFrame
-
-local DropdownButton = Instance.new("TextButton")
-DropdownButton.Name = "DropdownButton"
-DropdownButton.Size = UDim2.new(1, 0, 1, 0)
-DropdownButton.Text = ""
-DropdownButton.BackgroundTransparency = 1
-DropdownButton.ZIndex = 3
-DropdownButton.Parent = DropdownFrame
-
-local DropdownArrow = Instance.new("TextLabel")
-DropdownArrow.Size = UDim2.new(0, 30, 1, 0)
-DropdownArrow.Position = UDim2.new(1, -30, 0, 0)
-DropdownArrow.Text = "▼"
-DropdownArrow.Font = Enum.Font.SourceSans
-DropdownArrow.TextSize = 16
-DropdownArrow.TextColor3 = Color3.fromRGB(220, 220, 220)
-DropdownArrow.BackgroundTransparency = 1
-DropdownArrow.ZIndex = 2
-DropdownArrow.Parent = DropdownFrame
-
-local OptionsList = Instance.new("ScrollingFrame")
-OptionsList.Name = "OptionsList"
-OptionsList.Size = UDim2.new(0, 240, 0, 0)
-OptionsList.Position = UDim2.new(0.5, -120, 0, 85)
-OptionsList.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-OptionsList.BorderSizePixel = 1
-OptionsList.BorderColor3 = Color3.fromRGB(80, 80, 90)
-OptionsList.BackgroundTransparency = 0.1
-OptionsList.Visible = false
-OptionsList.ZIndex = 4
-OptionsList.Parent = MainFrame
-
-local UIListLayout = Instance.new("UIListLayout")
-UIListLayout.Padding = UDim.new(0, 2)
-UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
-UIListLayout.Parent = OptionsList
-
-local ToggleButton = Instance.new("TextButton")
-ToggleButton.Name = "ToggleButton"
-ToggleButton.Size = UDim2.new(0, 240, 0, 45)
-ToggleButton.Position = UDim2.new(0.5, -120, 0, 110)
-ToggleButton.Text = "OFF"
-ToggleButton.Font = Enum.Font.SourceSansBold
-ToggleButton.TextSize = 20
-ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-ToggleButton.ZIndex = 1
-ToggleButton.Parent = MainFrame
-
-local ToggleCorner = Instance.new("UICorner")
-ToggleCorner.CornerRadius = UDim.new(0, 6)
-ToggleCorner.Parent = ToggleButton
-
-local MinimizedButton = Instance.new("TextButton")
-MinimizedButton.Name = "MinimizedButton"
-MinimizedButton.Size = UDim2.new(0, 60, 0, 35)
-MinimizedButton.Position = UDim2.new(0, 20, 0.5, 0)
-MinimizedButton.Text = "MACRO"
-MinimizedButton.Font = Enum.Font.SourceSansBold
-MinimizedButton.TextSize = 18
-MinimizedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-MinimizedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
-MinimizedButton.BackgroundTransparency = 0.3
-MinimizedButton.Draggable = true
-MinimizedButton.Active = true
-MinimizedButton.Visible = false
-MinimizedButton.ZIndex = 5
-MinimizedButton.Parent = ScreenGui
-
-local MinimizedCorner = Instance.new("UICorner")
-MinimizedCorner.CornerRadius = UDim.new(0, 8)
-MinimizedCorner.Parent = MinimizedButton
-
--- ================================================================= --
---                          GUI FUNCTIONS                          --
+--                SAVE/LOAD & RECORDING FUNCTIONS                  --
 -- ================================================================= --
 
-local isDropdownOpen = false
-function ToggleDropdown()
-    isDropdownOpen = not isDropdownOpen
-    OptionsList.Visible = isDropdownOpen
-    DropdownArrow.Text = isDropdownOpen and "▲" or "▼"
-    if isDropdownOpen then
-        local numOptions = #OptionsList:GetChildren() - 1
-        local height = numOptions * 32
-        OptionsList.Size = UDim2.new(0, 240, 0, math.min(height, 96))
-        OptionsList.CanvasSize = UDim2.new(0,0,0,height)
-    else
-        OptionsList.Size = UDim2.new(0, 240, 0, 0)
+-- Kaydedilmiş makroları yükle
+local function LoadSavedMacros()
+    if not isfolder or not readfile or not loadstring then
+        print("Executor does not support file operations. Cannot load saved macros.")
+        return
     end
-end
-
-for macroName, _ in pairs(Macros) do
-    local optionButton = Instance.new("TextButton")
-    optionButton.Name = macroName
-    optionButton.Size = UDim2.new(1, -4, 0, 30)
-    optionButton.Text = macroName
-    optionButton.Font = Enum.Font.SourceSans
-    optionButton.TextSize = 15
-    optionButton.TextColor3 = Color3.fromRGB(200, 200, 200)
-    optionButton.BackgroundTransparency = 1
-    optionButton.ZIndex = 5
-    optionButton.Parent = OptionsList
     
-    optionButton.MouseButton1Click:Connect(function()
-        selectedMacroName = macroName
-        DropdownLabel.Text = macroName
-        ToggleDropdown()
-    end)
-end
+    local macroFolder = "macros"
+    if not isfolder(macroFolder) then
+        makefolder(macroFolder)
+    end
 
-function ToggleMacro()
-    if isMacroRunning then
-        if currentMacroThread then
-            task.cancel(currentMacroThread)
-            currentMacroThread = nil
-        end
-        isMacroRunning = false
-        ToggleButton.Text = "OFF"
-        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
-    else
-        if selectedMacroName and Macros[selectedMacroName] then
-            isMacroRunning = true
-            ToggleButton.Text = "ON"
-            ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
-            currentMacroThread = task.spawn(function()
-                local success, err = pcall(Macros[selectedMacroName])
-                if not success then
-                    warn("Error while running macro:", err)
-                    isMacroRunning = false
-                    ToggleButton.Text = "ERROR!"
-                    ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
-                end
-            end)
-        else
-            ToggleButton.Text = "SELECT MACRO!"
-            task.wait(1)
-            if not isMacroRunning then
-                ToggleButton.Text = "OFF"
+    local files = listfiles(macroFolder)
+    for _, file in ipairs(files) do
+        if file:match(".txt$") then -- Sadece .txt dosyalarını oku
+            local macroName = file:sub(1, -5) -- .txt uzantısını kaldır
+            local content = readfile(macroFolder .. "/" .. file)
+            local func, err = loadstring(content)
+            if func then
+                Macros[macroName] = func() -- Fonksiyonu çağırarak içindeki fonksiyonu al
+                print("Loaded saved macro: " .. macroName)
+            else
+                warn("Failed to load macro '"..macroName.."':", err)
             end
         end
     end
 end
 
-function ToggleMinimize()
-    local isVisible = MainFrame.Visible
-    MainFrame.Visible = not isVisible
-    MinimizedButton.Visible = isVisible
+-- Kaydı dosyaya dönüştür
+local function GenerateMacroFile(actions)
+    local lines = {
+        "return function()",
+        "    return function(difficulty)",
+        "        local isMacroRunning = true",
+        "        local RF_ClientRequestServer = game:GetService('ReplicatedStorage').RemoteFunction:WaitForChild('clientRequestServer')",
+        "        local RF_Voting = game:GetService('ReplicatedStorage').RemoteFunction:WaitForChild('RemoteFunction_Voting')",
+        "        while isMacroRunning do"
+    }
+    local lastTime = 0
+    for _, action in ipairs(actions) do
+        local delay = action.time - lastTime
+        if delay > 0.01 then
+            table.insert(lines, string.format("            task.wait(%.4f)", delay))
+        end
+        
+        local argsStr = {}
+        for _, arg in ipairs(action.args) do
+            if type(arg) == "string" then
+                table.insert(argsStr, string.format('%q', arg))
+            else
+                table.insert(argsStr, tostring(arg))
+            end
+        end
+        
+        if action.remote == RF_ClientRequestServer then
+            table.insert(lines, string.format("            RF_ClientRequestServer:InvokeServer(%s)", table.concat(argsStr, ", ")))
+        elseif action.remote == RF_Voting then
+            table.insert(lines, string.format("            RF_Voting:InvokeServer(%s)", table.concat(argsStr, ", ")))
+        end
+        lastTime = action.time
+    end
+    table.insert(lines, "            task.wait(1) -- End of loop wait")
+    table.insert(lines, "        end")
+    table.insert(lines, "    end")
+    table.insert(lines, "end")
+    return table.concat(lines, "\n")
 end
+
+-- Hook fonksiyonları
+local oldCRS, oldVoting
+local function HookRemotes()
+    oldCRS = hookfunction(RF_ClientRequestServer.InvokeServer, function(self, ...)
+        if isRecording then
+            local args = {...}
+            local id = args[1]
+            -- Sadece bilinen kritik eventleri kaydet
+            if id == 200007 or id == 200009 or id == 8 then
+                table.insert(recordedActions, {remote = RF_ClientRequestServer, args = args, time = tick() - recordingStartTime})
+                print("Recorded action: CRS, ID: "..tostring(id))
+            end
+        end
+        return oldCRS(self, ...)
+    end)
+    oldVoting = hookfunction(RF_Voting.InvokeServer, function(self, ...)
+        if isRecording then
+            local args = {...}
+            local id = args[1]
+            if id == "DifficultyVoting" then
+                table.insert(recordedActions, {remote = RF_Voting, args = args, time = tick() - recordingStartTime})
+                 print("Recorded action: Voting, ID: "..tostring(id))
+            end
+        end
+        return oldVoting(self, ...)
+    end)
+end
+
+local function UnhookRemotes()
+    if oldCRS then unhookfunction(RF_ClientRequestServer.InvokeServer); oldCRS = nil end
+    if oldVoting then unhookfunction(RF_Voting.InvokeServer); oldVoting = nil end
+end
+
+
+-- ================================================================= --
+--                             GUI CODE                              --
+-- ================================================================= --
+
+-- Önce mevcut makroları yükle
+LoadSavedMacros()
+
+local selectedMacroName = nil
+local isMacroRunning = false
+local currentMacroThread = nil
+
+local ScreenGui = Instance.new("ScreenGui"); ScreenGui.Name = "StickmanTD_GUI"; ScreenGui.Parent = CoreGui; ScreenGui.ResetOnSpawn = false
+local MainFrame = Instance.new("Frame"); MainFrame.Name = "MainFrame"; MainFrame.Size = UDim2.new(0, 280, 0, 280); MainFrame.Position = UDim2.new(0.5, -140, 0.5, -140); MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45); MainFrame.BorderSizePixel = 0; MainFrame.Active = true; MainFrame.Draggable = true; MainFrame.Parent = ScreenGui
+local UICorner = Instance.new("UICorner"); UICorner.CornerRadius = UDim.new(0, 8); UICorner.Parent = MainFrame
+local TitleBar = Instance.new("Frame"); TitleBar.Name = "TitleBar"; TitleBar.Size = UDim2.new(1, 0, 0, 30); TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35); TitleBar.BorderSizePixel = 0; TitleBar.ZIndex = 2; TitleBar.Parent = MainFrame
+local TitleCorner = Instance.new("UICorner"); TitleCorner.CornerRadius = UDim.new(0, 8); TitleCorner.Parent = TitleBar
+local TitleLabel = Instance.new("TextLabel"); TitleLabel.Name = "TitleLabel"; TitleLabel.Size = UDim2.new(1, -35, 1, 0); TitleLabel.Text = "Stickman TD Player"; TitleLabel.Font = Enum.Font.SourceSansBold; TitleLabel.TextSize = 16; TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255); TitleLabel.BackgroundTransparency = 1; TitleLabel.TextXAlignment = Enum.TextXAlignment.Left; TitleLabel.Position = UDim2.new(0, 10, 0, 0); TitleLabel.ZIndex = 2; TitleLabel.Parent = TitleBar
+local MinimizeButton = Instance.new("TextButton"); MinimizeButton.Name = "MinimizeButton"; MinimizeButton.Size = UDim2.new(0, 30, 1, 0); MinimizeButton.Position = UDim2.new(1, -30, 0, 0); MinimizeButton.Text = "–"; MinimizeButton.Font = Enum.Font.SourceSansBold; MinimizeButton.TextSize = 24; MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200); MinimizeButton.BackgroundTransparency = 1; MinimizeButton.ZIndex = 2; MinimizeButton.Parent = TitleBar
+local DropdownFrame = Instance.new("Frame"); DropdownFrame.Name = "DropdownFrame"; DropdownFrame.Size = UDim2.new(0, 240, 0, 35); DropdownFrame.Position = UDim2.new(0.5, -120, 0, 50); DropdownFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60); DropdownFrame.BorderSizePixel = 1; DropdownFrame.BorderColor3 = Color3.fromRGB(80, 80, 90); DropdownFrame.ZIndex = 2; DropdownFrame.Parent = MainFrame
+local DropdownCorner = Instance.new("UICorner"); DropdownCorner.CornerRadius = UDim.new(0, 6); DropdownCorner.Parent = DropdownFrame
+local DropdownLabel = Instance.new("TextLabel"); DropdownLabel.Name = "DropdownLabel"; DropdownLabel.Size = UDim2.new(1, -30, 1, 0); DropdownLabel.Text = "Select Macro..."; DropdownLabel.Font = Enum.Font.SourceSans; DropdownLabel.TextSize = 16; DropdownLabel.TextColor3 = Color3.fromRGB(220, 220, 220); DropdownLabel.BackgroundTransparency = 1; DropdownLabel.Position = UDim2.new(0, 10, 0, 0); DropdownLabel.ZIndex = 2; DropdownLabel.Parent = DropdownFrame
+local DropdownButton = Instance.new("TextButton"); DropdownButton.Name = "DropdownButton"; DropdownButton.Size = UDim2.new(1, 0, 1, 0); DropdownButton.Text = ""; DropdownButton.BackgroundTransparency = 1; DropdownButton.ZIndex = 3; DropdownButton.Parent = DropdownFrame
+local DropdownArrow = Instance.new("TextLabel"); DropdownArrow.Size = UDim2.new(0, 30, 1, 0); DropdownArrow.Position = UDim2.new(1, -30, 0, 0); DropdownArrow.Text = "▼"; DropdownArrow.Font = Enum.Font.SourceSans; DropdownArrow.TextSize = 16; DropdownArrow.TextColor3 = Color3.fromRGB(220, 220, 220); DropdownArrow.BackgroundTransparency = 1; DropdownArrow.ZIndex = 2; DropdownArrow.Parent = DropdownFrame
+local OptionsList = Instance.new("ScrollingFrame"); OptionsList.Name = "OptionsList"; OptionsList.Size = UDim2.new(0, 240, 0, 0); OptionsList.Position = UDim2.new(0.5, -120, 0, 85); OptionsList.BackgroundColor3 = Color3.fromRGB(50, 50, 60); OptionsList.BorderSizePixel = 1; OptionsList.BorderColor3 = Color3.fromRGB(80, 80, 90); OptionsList.BackgroundTransparency = 0.1; OptionsList.Visible = false; OptionsList.ZIndex = 4; OptionsList.Parent = MainFrame
+local UIListLayout = Instance.new("UIListLayout"); UIListLayout.Padding = UDim.new(0, 2); UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder; UIListLayout.Parent = OptionsList
+local DifficultyLabel = Instance.new("TextLabel"); DifficultyLabel.Name = "DifficultyLabel"; DifficultyLabel.Size = UDim2.new(0, 100, 0, 35); DifficultyLabel.Position = UDim2.new(0.5, -120, 0, 110); DifficultyLabel.Text = "Difficulty (1-7):"; DifficultyLabel.Font = Enum.Font.SourceSans; DifficultyLabel.TextSize = 16; DifficultyLabel.TextColor3 = Color3.fromRGB(220, 220, 220); DifficultyLabel.BackgroundTransparency = 1; DifficultyLabel.TextXAlignment = Enum.TextXAlignment.Left; DifficultyLabel.ZIndex = 2; DifficultyLabel.Parent = MainFrame
+local DifficultyInput = Instance.new("TextBox"); DifficultyInput.Name = "DifficultyInput"; DifficultyInput.Size = UDim2.new(0, 110, 0, 35); DifficultyInput.Position = UDim2.new(0.5, 10, 0, 110); DifficultyInput.Font = Enum.Font.SourceSansBold; DifficultyInput.Text = "1"; DifficultyInput.TextColor3 = Color3.fromRGB(10, 10, 10); DifficultyInput.BackgroundColor3 = Color3.fromRGB(180, 180, 180); DifficultyInput.ZIndex = 2; DifficultyInput.Parent = MainFrame
+local DiffInputCorner = Instance.new("UICorner"); DiffInputCorner.CornerRadius = UDim.new(0, 6); DiffInputCorner.Parent = DifficultyInput
+
+-- YENİ: Kayıt Bölümü
+local SaveNameLabel = Instance.new("TextLabel"); SaveNameLabel.Name = "SaveNameLabel"; SaveNameLabel.Size = UDim2.new(0, 100, 0, 35); SaveNameLabel.Position = UDim2.new(0.5, -120, 0, 150); SaveNameLabel.Text = "Save Name:"; SaveNameLabel.Font = Enum.Font.SourceSans; SaveNameLabel.TextSize = 16; SaveNameLabel.TextColor3 = Color3.fromRGB(220, 220, 220); SaveNameLabel.BackgroundTransparency = 1; SaveNameLabel.TextXAlignment = Enum.TextXAlignment.Left; SaveNameLabel.ZIndex = 2; SaveNameLabel.Parent = MainFrame
+local SaveNameInput = Instance.new("TextBox"); SaveNameInput.Name = "SaveNameInput"; SaveNameInput.Size = UDim2.new(0, 110, 0, 35); SaveNameInput.Position = UDim2.new(0.5, 10, 0, 150); SaveNameInput.Font = Enum.Font.SourceSansBold; SaveNameInput.Text = "MyMacro1"; SaveNameInput.TextColor3 = Color3.fromRGB(10, 10, 10); SaveNameInput.BackgroundColor3 = Color3.fromRGB(180, 180, 180); SaveNameInput.ZIndex = 2; SaveNameInput.Parent = MainFrame
+local SaveInputCorner = Instance.new("UICorner"); SaveInputCorner.CornerRadius = UDim.new(0, 6); SaveInputCorner.Parent = SaveNameInput
+
+local RecordButton = Instance.new("TextButton"); RecordButton.Name = "RecordButton"; RecordButton.Size = UDim2.new(0, 115, 0, 35); RecordButton.Position = UDim2.new(0.5, -120, 0, 190); RecordButton.Text = "RECORD"; RecordButton.Font = Enum.Font.SourceSansBold; RecordButton.TextSize = 16; RecordButton.TextColor3 = Color3.fromRGB(255, 255, 255); RecordButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50); RecordButton.ZIndex = 1; RecordButton.Parent = MainFrame
+local RecordCorner = Instance.new("UICorner"); RecordCorner.CornerRadius = UDim.new(0, 6); RecordCorner.Parent = RecordButton
+
+local StopSaveButton = Instance.new("TextButton"); StopSaveButton.Name = "StopSaveButton"; StopSaveButton.Size = UDim2.new(0, 115, 0, 35); StopSaveButton.Position = UDim2.new(0.5, 5, 0, 190); StopSaveButton.Text = "STOP & SAVE"; StopSaveButton.Font = Enum.Font.SourceSansBold; StopSaveButton.TextSize = 16; StopSaveButton.TextColor3 = Color3.fromRGB(255, 255, 255); StopSaveButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60); StopSaveButton.ZIndex = 1; StopSaveButton.Parent = MainFrame
+local StopSaveCorner = Instance.new("UICorner"); StopSaveCorner.CornerRadius = UDim.new(0, 6); StopSaveCorner.Parent = StopSaveButton
+
+-- Ana Toggle Butonu
+local ToggleButton = Instance.new("TextButton"); ToggleButton.Name = "ToggleButton"; ToggleButton.Size = UDim2.new(0, 240, 0, 45); ToggleButton.Position = UDim2.new(0.5, -120, 0, 230); ToggleButton.Text = "OFF"; ToggleButton.Font = Enum.Font.SourceSansBold; ToggleButton.TextSize = 20; ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255); ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50); ToggleButton.ZIndex = 1; ToggleButton.Parent = MainFrame
+local ToggleCorner = Instance.new("UICorner"); ToggleCorner.CornerRadius = UDim.new(0, 6); ToggleCorner.Parent = ToggleButton
+
+local MinimizedButton = Instance.new("TextButton"); MinimizedButton.Name = "MinimizedButton"; MinimizedButton.Size = UDim2.new(0, 60, 0, 35); MinimizedButton.Position = UDim2.new(0, 20, 0.5, 0); MinimizedButton.Text = "MACRO"; MinimizedButton.Font = Enum.Font.SourceSansBold; MinimizedButton.TextSize = 18; MinimizedButton.TextColor3 = Color3.fromRGB(255, 255, 255); MinimizedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60); MinimizedButton.BackgroundTransparency = 0.3; MinimizedButton.Draggable = true; MinimizedButton.Active = true; MinimizedButton.Visible = false; MinimizedButton.ZIndex = 5; MinimizedButton.Parent = ScreenGui
+local MinimizedCorner = Instance.new("UICorner"); MinimizedCorner.CornerRadius = UDim.new(0, 8); MinimizedCorner.Parent = MinimizedButton
+
+-- ================================================================= --
+--                          GUI FUNCTIONS                          --
+-- ================================================================= --
+local isDropdownOpen = false
+function ToggleDropdown() isDropdownOpen = not isDropdownOpen; OptionsList.Visible = isDropdownOpen; DropdownArrow.Text = isDropdownOpen and "▲" or "▼"; if isDropdownOpen then local numOptions = #OptionsList:GetChildren() - 1; local height = numOptions * 32; OptionsList.Size = UDim2.new(0, 240, 0, math.min(height, 96)); OptionsList.CanvasSize = UDim2.new(0,0,0,height) else OptionsList.Size = UDim2.new(0, 240, 0, 0) end end
+
+local function PopulateDropdown() OptionsList:ClearAllChildren(); UIListLayout.Parent = OptionsList; for macroName, _ in pairs(Macros) do local optionButton = Instance.new("TextButton"); optionButton.Name = macroName; optionButton.Size = UDim2.new(1, -4, 0, 30); optionButton.Text = macroName; optionButton.Font = Enum.Font.SourceSans; optionButton.TextSize = 15; optionButton.TextColor3 = Color3.fromRGB(200, 200, 200); optionButton.BackgroundTransparency = 1; optionButton.ZIndex = 5; optionButton.Parent = OptionsList; optionButton.MouseButton1Click:Connect(function() selectedMacroName = macroName; DropdownLabel.Text = macroName; ToggleDropdown() end) end end
+PopulateDropdown() -- İlk başta doldur
+
+function ToggleMacro() if isMacroRunning then if currentMacroThread then task.cancel(currentMacroThread); currentMacroThread = nil end; isMacroRunning = false; ToggleButton.Text = "OFF"; ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50) else if selectedMacroName and Macros[selectedMacroName] then local difficulty = tonumber(DifficultyInput.Text); if not difficulty or difficulty < 1 or difficulty > 7 then difficulty = 1; DifficultyInput.Text = "1" end; isMacroRunning = true; ToggleButton.Text = "ON"; ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50); currentMacroThread = task.spawn(function() local success, err = pcall(Macros[selectedMacroName], difficulty); if not success then warn("Error while running macro:", err); isMacroRunning = false; ToggleButton.Text = "ERROR!"; ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0) end end) else ToggleButton.Text = "SELECT MACRO!"; task.wait(1); if not isMacroRunning then ToggleButton.Text = "OFF" end end end end
+function ToggleMinimize() local isVisible = MainFrame.Visible; MainFrame.Visible = not isVisible; MinimizedButton.Visible = isVisible end
+
+RecordButton.MouseButton1Click:Connect(function()
+    if isRecording then return end
+    isRecording = true
+    recordedActions = {}
+    recordingStartTime = tick()
+    RecordButton.Text = "RECORDING..."
+    RecordButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    HookRemotes()
+end)
+
+StopSaveButton.MouseButton1Click:Connect(function()
+    if not isRecording then return end
+    isRecording = false
+    RecordButton.Text = "RECORDING..."
+    RecordButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+    HookRemotes()
+end)
+
+StopSaveButton.MouseButton1Click:Connect(function()
+    if not isRecording then return end
+    isRecording = false
+    RecordButton.Text = "RECORD"
+    RecordButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    UnhookRemotes()
+
+    local saveName = SaveNameInput.Text
+    if saveName == "" or #recordedActions == 0 then
+        print("Save name is empty or no actions were recorded. Not saving.")
+        return
+    end
+    
+    local fileContent = GenerateMacroFile(recordedActions)
+    if writefile then
+        writefile("macros/" .. saveName .. ".txt", fileContent)
+        print("Macro '"..saveName.."' saved successfully! Re-run the script to see it in the dropdown.")
+    else
+        print("Executor does not support writefile. Cannot save macro.")
+    end
+    
+    -- Dropdown'ı anında güncelle
+    task.wait(0.1)
+    LoadSavedMacros()
+    PopulateDropdown()
+end)
 
 DropdownButton.MouseButton1Click:Connect(ToggleDropdown)
 ToggleButton.MouseButton1Click:Connect(ToggleMacro)
 MinimizeButton.MouseButton1Click:Connect(ToggleMinimize)
 MinimizedButton.MouseButton1Click:Connect(ToggleMinimize)
 
-print("Stickman TD Macro Player [DEBUG MODE] loaded successfully.")
+print("Stickman TD Ultimate Player loaded successfully.")
