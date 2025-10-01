@@ -1,299 +1,335 @@
-local P = game:GetService("Players")
-local RS = game:GetService("ReplicatedStorage")
-local Workspace = game:GetService("Workspace")
+-- ================================================================= --
+--                     Stickman TD Macro Player                      --
+-- ================================================================= --
 
--- State variables
-local isRunning = true
-local isMinimized = false
-local isRecording = false
-local recordedActions = {}
-local startTime = 0
+-- Roblox Services
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Players = game:GetService("Players")
+local CoreGui = game:GetService("CoreGui")
 
--- Tüm KRİTİK Remote Event ve Function'lar
-local RF_ClientRequestServer = RS:WaitForChild("RemoteFunction"):WaitForChild("clientRequestServer")
-local RE_Notice = RS:WaitForChild("RemoteEvent"):WaitForChild("RemoteEvent_Notice")
-local RF_Voting = RS:WaitForChild("RemoteFunction"):WaitForChild("RemoteFunction_Voting")
-local RE_TowerEvent = RS:WaitForChild("RemoteEvent"):WaitForChild("RemoteEvent_towerEvent")
+-- RemoteFunction
+local RF_ClientRequestServer = ReplicatedStorage:WaitForChild("RemoteFunction"):WaitForChild("clientRequestServer")
 
-local LP = P.LocalPlayer
+-- ================================================================= --
+--                          MACRO LIST                               --
+-- ================================================================= --
 
--- #######################################################
--- # GUI BAŞLANGIÇ DÜZELTMESİ (GÖSTERİM GARANTİSİ)
--- #######################################################
+local Macros = {
+    ["Unit Placement & Upgrades"] = function()
+        local isMacroRunning = true
+        while isMacroRunning do
+            -- Call 1
+            RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)})
+            task.wait(5.407)
 
-local SG = Instance.new("ScreenGui")
-SG.Name = "MacroGUI"
-SG.ResetOnSpawn = false
--- En güvenilir yöntem: PlayerGui'ye atama yapmadan önce CoreGui'ye atama yapmayı dener
-SG.Parent = game:GetService("CoreGui") 
+            -- Call 2
+            RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)})
+            task.wait(22.053)
 
-local MF = Instance.new("Frame")
-MF.Name = "MainFrame"
-MF.Size = UDim2.new(0, 320, 0, 250) 
-MF.Position = UDim2.new(0.5, -160, 0.5, -125)
-MF.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
-MF.BorderSizePixel = 0
-MF.Active = true
-MF.Draggable = true
-MF.Parent = SG
+            -- Call 3
+            RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-7, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-7, 1, -29)})
+            task.wait(15.301)
 
-local TB = Instance.new("Frame")
-TB.Name = "TitleBar"
-TB.Size = UDim2.new(1, 0, 0, 30)
-TB.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-TB.Parent = MF
+            -- Call 4
+            RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-27, 1, -11, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-27, 1, -11)})
+            task.wait(6.39)
 
-local TL = Instance.new("TextLabel")
-TL.Text = "Macro Recorder - FINAL"
-TL.Size = UDim2.new(1, -60, 1, 0)
-TL.Font = Enum.Font.SourceSansBold
-TL.TextSize = 18
-TL.TextColor3 = Color3.new(1, 1, 1)
-TL.BackgroundTransparency = 1
-TL.Parent = TB
+            -- Call 5
+            RF_ClientRequestServer:InvokeServer(200007,{1321,CFrame.new(-19, 1, -29, 1, 0, 0, 0, 1, 0, 0, 0, 1),2,Vector3.new(-19, 1, -29)})
+            task.wait(9.716)
 
--- Status Label
-local StatusLabel = Instance.new("TextLabel")
-StatusLabel.Name = "StatusLabel"
-StatusLabel.Text = "Status: Ready to Record"
-StatusLabel.Size = UDim2.new(0.9, 0, 0, 20)
-StatusLabel.Position = UDim2.new(0.05, 0, 0.12, 0)
-StatusLabel.Font = Enum.Font.SourceSans
-StatusLabel.TextSize = 14
-StatusLabel.TextColor3 = Color3.new(0.8, 0.8, 0.8)
-StatusLabel.BackgroundTransparency = 1
-StatusLabel.Parent = MF
+            -- Call 6 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
+            task.wait(11.281)
 
--- Buttons
-local AB = Instance.new("Frame")
-AB.Name = "ActionBar"
-AB.Size = UDim2.new(1, 0, 0.6, 0)
-AB.Position = UDim2.new(0, 0, 0.25, 0)
-AB.BackgroundTransparency = 1
-AB.Parent = MF
+            -- Call 7 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2191})
+            task.wait(15.288)
 
-local RecordButton = Instance.new("TextButton")
-RecordButton.Name = "RecordButton"
-RecordButton.Text = "RECORD START"
-RecordButton.Size = UDim2.new(0.9, 0, 0, 50)
-RecordButton.Position = UDim2.new(0.05, 0, 0.05, 0)
-RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0) 
-RecordButton.Font = Enum.Font.SourceSansBold
-RecordButton.TextSize = 18
-RecordButton.TextColor3 = Color3.new(1, 1, 1)
-RecordButton.Parent = AB
+            -- Call 8 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_9658dfaa-339e-4161-8447-df15e1e374ef",2191})
+            task.wait(16.895)
 
-local StopButton = Instance.new("TextButton")
-StopButton.Name = "StopButton"
-StopButton.Text = "STOP & GENERATE LIST"
-StopButton.Size = UDim2.new(0.9, 0, 0, 50)
-StopButton.Position = UDim2.new(0.05, 0, 0.35, 0)
-StopButton.BackgroundColor3 = Color3.new(0.8, 0.8, 0)
-StopButton.Font = Enum.Font.SourceSansBold
-StopButton.TextSize = 18
-StopButton.TextColor3 = Color3.new(0, 0, 0)
-StopButton.Parent = AB
+            -- Call 9 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"3_GardenTDtrade_1071_29e33363-2dd6-43bc-bab0-179018194b05",1071})
+            task.wait(19.761)
 
-local ClearButton = Instance.new("TextButton")
-ClearButton.Name = "ClearButton"
-ClearButton.Text = "CLEAR ACTIONS"
-ClearButton.Size = UDim2.new(0.9, 0, 0, 50)
-ClearButton.Position = UDim2.new(0.05, 0, 0.65, 0)
-ClearButton.BackgroundColor3 = Color3.new(0.5, 0.5, 0.5)
-ClearButton.Font = Enum.Font.SourceSansBold
-ClearButton.TextSize = 18
-ClearButton.TextColor3 = Color3.new(1, 1, 1)
-ClearButton.Parent = AB
+            -- Call 10 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"3_GardenTDtrade_1071_29e33363-2dd6-43bc-bab0-179018194b05",1072})
+            task.wait(20.346)
 
--- Functions
-local function serializeArg(arg)
-    if typeof(arg) == "CFrame" or typeof(arg) == "Vector3" then
-        return tostring(arg)
-    elseif typeof(arg) == "string" then
-        return string.format('"%s"', arg)
-    elseif typeof(arg) == "boolean" or typeof(arg) == "number" then
-        return tostring(arg)
-    elseif typeof(arg) == "table" then
-        local inner = {}
-        for k, v in pairs(arg) do
-            table.insert(inner, string.format("[%s]=%s", serializeArg(k), serializeArg(v)))
+            -- Call 11 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
+            task.wait(1.009)
+
+            -- Call 12 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
+            task.wait(1.178)
+
+            -- Call 13 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"2_GardenTDtrade_1321_75216227-c61b-4eb1-ba98-a7e9b3767c4f",1322})
+            task.wait(14.028)
+
+            -- Call 14 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2191})
+            task.wait(14.655)
+
+            -- Call 15 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_9658dfaa-339e-4161-8447-df15e1e374ef",2191})
+            task.wait(25.758)
+
+            -- Call 16 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2191})
+            task.wait(28.282)
+            
+            -- Call 17 (Upgrade)
+            RF_ClientRequestServer:InvokeServer(200009,{"1_GardenTDtrade_2191_f0975e1e-9723-4aea-8cad-5dd61a83dd76",2192})
+
+            task.wait(3)
         end
-        return string.format("{%s}", table.concat(inner, ", "))
-    elseif typeof(arg) == "Instance" then
-        return "nil" 
-    else
-        return tostring(arg)
-    end
-end
-
-local function generateMacroList()
-    if #recordedActions == 0 then
-        StatusLabel.Text = "ERROR: No actions recorded to list!"
-        return
-    end
-
-    local code = {}
-    table.insert(code, "-- OTOMATİK OLUŞTURULAN MAKRO KODU (4 KANAL) --")
-    table.insert(code, "local RS = game:GetService('ReplicatedStorage')")
-    table.insert(code, "local RE_Notice = RS.RemoteEvent.RemoteEvent_Notice")
-    table.insert(code, "local RF_Voting = RS.RemoteFunction.RemoteFunction_Voting")
-    table.insert(code, "local RE_TowerEvent = RS.RemoteEvent.RemoteEvent_towerEvent")
-    table.insert(code, "local RF_ClientRequestServer = RS.RemoteFunction.clientRequestServer\n")
-    table.insert(code, "while true do")
+    end,
     
-    local previousTime = 0
-    
-    for i, action in ipairs(recordedActions) do
-        local remote = action.instance
-        local args = action.args
-        local delay = action.time - previousTime
-        previousTime = action.time
-        
-        if delay > 0.005 then 
-            table.insert(code, string.format("    task.wait(%.4f)", delay))
+    ["Example Macro 2 (Fast Cash)"] = function()
+        local isMacroRunning = true
+        while isMacroRunning do
+            print("Example Macro 2 is running...")
+            task.wait(1)
         end
+    end,
+}
 
-        local args_str = {}
-        for _, arg in ipairs(args) do
-             table.insert(args_str, serializeArg(arg))
-        end
-        local args_str_final = table.concat(args_str, ", ")
+-- ================================================================= --
+--                             GUI CODE                              --
+-- ================================================================= --
 
-        if remote.ClassName == "RemoteFunction" and remote.Name == "clientRequestServer" then
-            table.insert(code, string.format("    RF_ClientRequestServer:InvokeServer(%s)", args_str_final))
-        elseif remote.ClassName == "RemoteEvent" and remote.Name == "RemoteEvent_Notice" then
-             table.insert(code, string.format("    RE_Notice:FireServer(%s)", args_str_final))
-        elseif remote.ClassName == "RemoteFunction" and remote.Name == "RemoteFunction_Voting" then
-             table.insert(code, string.format("    RF_Voting:InvokeServer(%s)", args_str_final))
-        elseif remote.ClassName == "RemoteEvent" and remote.Name == "RemoteEvent_towerEvent" then
-             table.insert(code, string.format("    RE_TowerEvent:FireServer(%s)", args_str_final))
-        end
-    end
-    table.insert(code, "    task.wait(1) -- Yeni döngüye geçmeden kısa bekleme")
-    table.insert(code, "end")
-    
-    local final_code = table.concat(code, "\n")
-    print("\n\n" .. final_code .. "\n\n")
-    StatusLabel.Text = "Status: Macro List Generated! Check F9 Console."
-end
+local selectedMacroName = nil
+local isMacroRunning = false
+local currentMacroThread = nil
 
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "StickmanTD_GUI"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
 
--- #######################################################
--- # HOOK KISMI - TÜM KANALLARI DİNLİYORUZ
--- #######################################################
+local MainFrame = Instance.new("Frame")
+MainFrame.Name = "MainFrame"
+MainFrame.Size = UDim2.new(0, 280, 0, 180)
+MainFrame.Position = UDim2.new(0.5, -140, 0.5, -90)
+MainFrame.BackgroundColor3 = Color3.fromRGB(35, 35, 45)
+MainFrame.BorderSizePixel = 0
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
 
--- 1. clientRequestServer HOOK (InvokeServer)
-local originalClientRequestServer = RF_ClientRequestServer.InvokeServer
-RF_ClientRequestServer.InvokeServer = function(self, ...)
-    local args = {...}
-    if isRecording then
-        recordAction(RF_ClientRequestServer, args)
-    end
-    return originalClientRequestServer(self, unpack(args))
-end
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 8)
+UICorner.Parent = MainFrame
 
--- 2. RemoteEvent_Notice HOOK (FireServer)
-local originalNotice = RE_Notice.FireServer
-RE_Notice.FireServer = function(self, ...)
-    local args = {...}
-    if isRecording then
-        recordAction(RE_Notice, args)
-    end
-    return originalNotice(self, unpack(args))
-end
+local TitleBar = Instance.new("Frame")
+TitleBar.Name = "TitleBar"
+TitleBar.Size = UDim2.new(1, 0, 0, 30)
+TitleBar.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+TitleBar.BorderSizePixel = 0
+TitleBar.Parent = MainFrame
 
--- 3. RemoteFunction_Voting HOOK (InvokeServer)
-local originalVoting = RF_Voting.InvokeServer
-RF_Voting.InvokeServer = function(self, ...)
-    local args = {...}
-    if isRecording then
-        recordAction(RF_Voting, args)
-    end
-    return originalVoting(self, unpack(args))
-end
+local TitleCorner = Instance.new("UICorner")
+TitleCorner.CornerRadius = UDim.new(0, 8)
+TitleCorner.Parent = TitleBar
 
--- 4. RemoteEvent_towerEvent HOOK (FireServer)
-local originalTowerEvent = RE_TowerEvent.FireServer
-RE_TowerEvent.FireServer = function(self, ...)
-    local args = {...}
-    if isRecording then
-        recordAction(RE_TowerEvent, args)
-    end
-    return originalTowerEvent(self, unpack(args))
-end
+local TitleLabel = Instance.new("TextLabel")
+TitleLabel.Name = "TitleLabel"
+TitleLabel.Size = UDim2.new(1, -35, 1, 0)
+TitleLabel.Text = "Stickman TD Player"
+TitleLabel.Font = Enum.Font.SourceSansBold
+TitleLabel.TextSize = 16
+TitleLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+TitleLabel.BackgroundTransparency = 1
+TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
+TitleLabel.Position = UDim2.new(0, 10, 0, 0)
+TitleLabel.Parent = TitleBar
 
--- #######################################################
--- # BUTTON CONNECTIONS
--- #######################################################
+local MinimizeButton = Instance.new("TextButton")
+MinimizeButton.Name = "MinimizeButton"
+MinimizeButton.Size = UDim2.new(0, 30, 1, 0)
+MinimizeButton.Position = UDim2.new(1, -30, 0, 0)
+MinimizeButton.Text = "–"
+MinimizeButton.Font = Enum.Font.SourceSansBold
+MinimizeButton.TextSize = 24
+MinimizeButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+MinimizeButton.BackgroundTransparency = 1
+MinimizeButton.Parent = TitleBar
 
-RecordButton.MouseButton1Click:Connect(function()
-    if isRecording then return end
-    isRecording = true
-    recordedActions = {}
-    startTime = tick()
-    RecordButton.BackgroundColor3 = Color3.new(1, 0.5, 0) 
-    StatusLabel.Text = "Status: Recording... START! Perform one full cycle."
-end)
+local DropdownFrame = Instance.new("Frame")
+DropdownFrame.Name = "DropdownFrame"
+DropdownFrame.Size = UDim2.new(0, 240, 0, 35)
+DropdownFrame.Position = UDim2.new(0.5, -120, 0, 50)
+DropdownFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+DropdownFrame.BorderSizePixel = 1
+DropdownFrame.BorderColor3 = Color3.fromRGB(80, 80, 90)
+DropdownFrame.ClipsDescendants = true
+DropdownFrame.Parent = MainFrame
 
-StopButton.MouseButton1Click:Connect(function()
-    if not isRecording then return StatusLabel.Text = "Status: Nothing is recording." end
-    isRecording = false
-    RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
-    StatusLabel.Text = string.format("Status: Stopped Recording. Total Actions: %d. Generating List...", #recordedActions)
-    generateMacroList()
-end)
+local DropdownCorner = Instance.new("UICorner")
+DropdownCorner.CornerRadius = UDim.new(0, 6)
+DropdownCorner.Parent = DropdownFrame
 
-ClearButton.MouseButton1Click:Connect(function()
-    if isRecording then return StatusLabel.Text = "Status: Stop recording first!" end
-    recordedActions = {}
-    StatusLabel.Text = "Status: Cleared. Actions: 0"
-    RecordButton.BackgroundColor3 = Color3.new(0.7, 0, 0)
-end)
+local DropdownLabel = Instance.new("TextLabel")
+DropdownLabel.Name = "DropdownLabel"
+DropdownLabel.Size = UDim2.new(1, -30, 1, 0)
+DropdownLabel.Text = "Select Macro..."
+DropdownLabel.Font = Enum.Font.SourceSans
+DropdownLabel.TextSize = 16
+DropdownLabel.TextColor3 = Color3.fromRGB(220, 220, 220)
+DropdownLabel.BackgroundTransparency = 1
+DropdownLabel.Position = UDim2.new(0, 10, 0, 0)
+DropdownLabel.TextXAlignment = Enum.TextXAlignment.Left
+DropdownLabel.Parent = DropdownFrame
 
--- Kapatma İşlevi
-local CloseButton = Instance.new("TextButton")
-CloseButton.Name = "CloseButton"
-CloseButton.Size = UDim2.new(0, 30, 1, 0)
-CloseButton.Position = UDim2.new(1, -30, 0, 0)
-CloseButton.Text = "X"
-CloseButton.Font = Enum.Font.SourceSansBold
-CloseButton.TextSize = 25
-CloseButton.TextColor3 = Color3.new(1, 1, 1)
-CloseButton.BackgroundColor3 = Color3.new(0.9, 0, 0)
-CloseButton.Parent = TB
+local DropdownButton = Instance.new("TextButton")
+DropdownButton.Name = "DropdownButton"
+DropdownButton.Size = UDim2.new(1, 0, 1, 0)
+DropdownButton.Text = ""
+DropdownButton.BackgroundTransparency = 1
+DropdownButton.Parent = DropdownFrame
 
-CloseButton.MouseButton1Click:Connect(function()
-    isRecording = false
-    isRunning = false
-    SG:Destroy()
-end)
+local DropdownArrow = Instance.new("TextLabel")
+DropdownArrow.Size = UDim2.new(0, 30, 1, 0)
+DropdownArrow.Position = UDim2.new(1, -30, 0, 0)
+DropdownArrow.Text = "▼"
+DropdownArrow.Font = Enum.Font.SourceSans
+DropdownArrow.TextSize = 16
+DropdownArrow.TextColor3 = Color3.fromRGB(220, 220, 220)
+DropdownArrow.BackgroundTransparency = 1
+DropdownArrow.Parent = DropdownFrame
 
--- Minimize İşlevi
+local OptionsList = Instance.new("ScrollingFrame")
+OptionsList.Name = "OptionsList"
+OptionsList.Size = UDim2.new(1, 0, 0, 0)
+OptionsList.Position = UDim2.new(0, 0, 1, 0)
+OptionsList.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+OptionsList.BorderSizePixel = 1
+OptionsList.BorderColor3 = Color3.fromRGB(80, 80, 90)
+OptionsList.BackgroundTransparency = 0.1
+OptionsList.Visible = false
+OptionsList.Parent = DropdownFrame
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Padding = UDim.new(0, 2)
+UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
+UIListLayout.Parent = OptionsList
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Name = "ToggleButton"
+ToggleButton.Size = UDim2.new(0, 240, 0, 45)
+ToggleButton.Position = UDim2.new(0.5, -120, 0, 110)
+ToggleButton.Text = "OFF"
+ToggleButton.Font = Enum.Font.SourceSansBold
+ToggleButton.TextSize = 20
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+ToggleButton.Parent = MainFrame
+
+local ToggleCorner = Instance.new("UICorner")
+ToggleCorner.CornerRadius = UDim.new(0, 6)
+ToggleCorner.Parent = ToggleButton
+
 local MinimizedButton = Instance.new("TextButton")
 MinimizedButton.Name = "MinimizedButton"
-MinimizedButton.Size = UDim2.new(0, 50, 0, 30)
-MinimizedButton.Position = UDim2.new(0, 5, 0.95, -35)
-MinimizedButton.Text = "Macro"
+MinimizedButton.Size = UDim2.new(0, 60, 0, 35)
+MinimizedButton.Position = UDim2.new(0, 20, 0.5, 0)
+MinimizedButton.Text = "MACRO"
 MinimizedButton.Font = Enum.Font.SourceSansBold
 MinimizedButton.TextSize = 18
-MinimizedButton.TextColor3 = Color3.new(1, 1, 1)
-MinimizedButton.BackgroundTransparency = 0.5
-MinimizedButton.BackgroundColor3 = Color3.new(0.1, 0.1, 0.1)
+MinimizedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+MinimizedButton.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
+MinimizedButton.BackgroundTransparency = 0.3
 MinimizedButton.Draggable = true
+MinimizedButton.Active = true
 MinimizedButton.Visible = false
-MinimizedButton.Parent = SG
+MinimizedButton.Parent = ScreenGui
 
-local originalFrameSize = MF.Size
-local MB = MF:FindFirstChild("TitleBar"):FindFirstChild("MinimizeButton")
+local MinimizedCorner = Instance.new("UICorner")
+MinimizedCorner.CornerRadius = UDim.new(0, 8)
+MinimizedCorner.Parent = MinimizedButton
 
-MB.MouseButton1Click:Connect(function()
-    isMinimized = true
-    MF.Visible = false
-    MinimizedButton.Visible = true
-end)
+-- ================================================================= --
+--                          GUI FUNCTIONS                          --
+-- ================================================================= --
 
-MinimizedButton.MouseButton1Click:Connect(function(self, ...)
-    isMinimized = false
-    MF.Visible = true
-    MinimizedButton.Visible = false
-end)
+local isDropdownOpen = false
+function ToggleDropdown()
+    isDropdownOpen = not isDropdownOpen
+    OptionsList.Visible = isDropdownOpen
+    DropdownArrow.Text = isDropdownOpen and "▲" or "▼"
+    if isDropdownOpen then
+        local numOptions = #OptionsList:GetChildren() - 1
+        local height = numOptions * 32
+        OptionsList.Size = UDim2.new(1, 0, 0, math.min(height, 96))
+        OptionsList.CanvasSize = UDim2.new(0,0,0,height)
+    else
+        OptionsList.Size = UDim2.new(1, 0, 0, 0)
+    end
+end
+
+for macroName, _ in pairs(Macros) do
+    local optionButton = Instance.new("TextButton")
+    optionButton.Name = macroName
+    optionButton.Size = UDim2.new(1, -4, 0, 30)
+    optionButton.Text = macroName
+    optionButton.Font = Enum.Font.SourceSans
+    optionButton.TextSize = 15
+    optionButton.TextColor3 = Color3.fromRGB(200, 200, 200)
+    optionButton.BackgroundTransparency = 1
+    optionButton.Parent = OptionsList
+    
+    optionButton.MouseButton1Click:Connect(function()
+        selectedMacroName = macroName
+        DropdownLabel.Text = macroName
+        ToggleDropdown()
+    end)
+end
+
+function ToggleMacro()
+    if isMacroRunning then
+        if currentMacroThread then
+            task.cancel(currentMacroThread)
+            currentMacroThread = nil
+        end
+        isMacroRunning = false
+        ToggleButton.Text = "OFF"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(200, 50, 50)
+    else
+        if selectedMacroName and Macros[selectedMacroName] then
+            isMacroRunning = true
+            ToggleButton.Text = "ON"
+            ToggleButton.BackgroundColor3 = Color3.fromRGB(50, 200, 50)
+            currentMacroThread = task.spawn(function()
+                local success, err = pcall(Macros[selectedMacroName])
+                if not success then
+                    warn("Error while running macro:", err)
+                    isMacroRunning = false
+                    ToggleButton.Text = "ERROR!"
+                    ToggleButton.BackgroundColor3 = Color3.fromRGB(255, 150, 0)
+                end
+            end)
+        else
+            ToggleButton.Text = "SELECT MACRO!"
+            task.wait(1)
+            if not isMacroRunning then
+                ToggleButton.Text = "OFF"
+            end
+        end
+    end
+end
+
+function ToggleMinimize()
+    local isVisible = MainFrame.Visible
+    MainFrame.Visible = not isVisible
+    MinimizedButton.Visible = isVisible
+end
+
+DropdownButton.MouseButton1Click:Connect(ToggleDropdown)
+ToggleButton.MouseButton1Click:Connect(ToggleMacro)
+MinimizeButton.MouseButton1Click:Connect(ToggleMinimize)
+MinimizedButton.MouseButton1Click:Connect(ToggleMinimize)
+
+print("Stickman TD Macro Player loaded successfully.")
