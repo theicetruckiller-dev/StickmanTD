@@ -166,7 +166,6 @@ DropdownFrame.Position = UDim2.new(0.5, -120, 0, 50)
 DropdownFrame.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 DropdownFrame.BorderSizePixel = 1
 DropdownFrame.BorderColor3 = Color3.fromRGB(80, 80, 90)
-DropdownFrame.ClipsDescendants = true
 DropdownFrame.Parent = MainFrame
 
 local DropdownCorner = Instance.new("UICorner")
@@ -190,6 +189,7 @@ DropdownButton.Name = "DropdownButton"
 DropdownButton.Size = UDim2.new(1, 0, 1, 0)
 DropdownButton.Text = ""
 DropdownButton.BackgroundTransparency = 1
+DropdownButton.ZIndex = 2
 DropdownButton.Parent = DropdownFrame
 
 local DropdownArrow = Instance.new("TextLabel")
@@ -204,14 +204,16 @@ DropdownArrow.Parent = DropdownFrame
 
 local OptionsList = Instance.new("ScrollingFrame")
 OptionsList.Name = "OptionsList"
-OptionsList.Size = UDim2.new(1, 0, 0, 0)
-OptionsList.Position = UDim2.new(0, 0, 1, 0)
+OptionsList.Size = UDim2.new(0, 240, 0, 0)
+OptionsList.Position = UDim2.new(0.5, -120, 0, 85) -- Düzeltilmiş pozisyon
 OptionsList.BackgroundColor3 = Color3.fromRGB(50, 50, 60)
 OptionsList.BorderSizePixel = 1
 OptionsList.BorderColor3 = Color3.fromRGB(80, 80, 90)
 OptionsList.BackgroundTransparency = 0.1
 OptionsList.Visible = false
-OptionsList.Parent = DropdownFrame
+OptionsList.ZIndex = 3 -- Diğer her şeyin üzerinde görünmesi için
+OptionsList.Parent = MainFrame -- Düzeltilmiş Parent
+
 local UIListLayout = Instance.new("UIListLayout")
 UIListLayout.Padding = UDim.new(0, 2)
 UIListLayout.SortOrder = Enum.SortOrder.LayoutOrder
@@ -263,10 +265,10 @@ function ToggleDropdown()
     if isDropdownOpen then
         local numOptions = #OptionsList:GetChildren() - 1
         local height = numOptions * 32
-        OptionsList.Size = UDim2.new(1, 0, 0, math.min(height, 96))
+        OptionsList.Size = UDim2.new(0, 240, 0, math.min(height, 96))
         OptionsList.CanvasSize = UDim2.new(0,0,0,height)
     else
-        OptionsList.Size = UDim2.new(1, 0, 0, 0)
+        OptionsList.Size = UDim2.new(0, 240, 0, 0)
     end
 end
 
