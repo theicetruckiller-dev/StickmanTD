@@ -1,5 +1,5 @@
 -- ================================================================= --
---                     Stickman TD Macro Player                      --
+--              Stickman TD Macro Player (DEBUG VERSION)             --
 -- ================================================================= --
 
 -- Roblox Services
@@ -18,16 +18,11 @@ local RF_ClientRequestServer = ReplicatedStorage:WaitForChild("RemoteFunction"):
 local Macros = {
     ["Smart Auto-Farm"] = function()
         local isMacroRunning = true
-        
-        -- Bu değişken, başlangıç ünitelerinin sadece bir kere yerleştirilmesini sağlar.
         local initialUnitsPlaced = false
 
         while isMacroRunning do
-            
-            -- === FAZ 1: BAŞLANGIÇ ÜNİTELERİNİ YERLEŞTİRME (Sadece ilk döngüde çalışır) ===
             if not initialUnitsPlaced then
                 print("Phase 1: Placing initial units for the first time...")
-                -- Eski loglardaki statik yerleştirme verilerini kullanıyoruz
                 RF_ClientRequestServer:InvokeServer(200007,{2191,CFrame.new(-21, 1, -1, 1, 0, 0, 0, 1, 0, 0, 0, 1),1,Vector3.new(-21, 1, -1)})
                 task.wait(1)
                 RF_ClientRequestServer:InvokeServer(200007,{1071,CFrame.new(-43, 1, -36, 1, 0, 0, 0, 1, 0, 0, 0, 1),3,Vector3.new(-43, 1, -36)})
@@ -42,43 +37,61 @@ local Macros = {
                 print("Initial units placed.")
             end
 
-            -- === FAZ 2: AKILLI YÜKSELTME (Sürekli çalışır) ===
+            -- ################################################################## --
+            -- #                        DEBUG BÖLÜMÜ                          # --
+            -- ################################################################## --
             print("Phase 2: Smartly upgrading all available units...")
             local unitsFolder = Workspace:WaitForChild("Hero")
 
             if unitsFolder then
+                print("SUCCESS: Found 'Hero' folder in workspace.")
+                if #unitsFolder:GetChildren() == 0 then
+                    print("WARNING: 'Hero' folder is empty. No units to upgrade.")
+                end
+
                 for i, unit in ipairs(unitsFolder:GetChildren()) do
                     if unit:IsA("Model") then
-                        -- Hem Attribute hem de Value objesi olarak arama yap (garanti olsun diye)
+                        print("-------------------------------------------------")
+                        print("Scanning unit: " .. unit.Name)
+
                         local uuidValue = unit:GetAttribute("UniqueId") or (unit:FindFirstChild("UniqueId") and unit:FindFirstChild("UniqueId").Value)
                         local pidValue = unit:GetAttribute("PID") or (unit:FindFirstChild("PID") and unit:FindFirstChild("PID").Value)
 
+                        print("...Searching for 'UniqueId'. Found: " .. tostring(uuidValue))
+                        print("...Searching for 'PID'. Found: " .. tostring(pidValue))
+
                         if uuidValue and pidValue then
-                            -- Sonraki seviye ID'sini hesaplıyoruz (PID + 1)
                             local nextUpgradeID = tonumber(pidValue) + 1
+                            print("SUCCESS: All data found. Attempting to upgrade PID "..tostring(pidValue).." to "..tostring(nextUpgradeID))
                             
-                            print("Found unit "..unit.Name.." (PID: "..pidValue..") with UUID. Upgrading to "..nextUpgradeID)
-                            RF_ClientRequestServer:InvokeServer(200009, {uuidValue, nextUpgradeID})
+                            -- Hata kontrolü için pcall içine alalım
+                            local success, err = pcall(function()
+                                RF_ClientRequestServer:InvokeServer(200009, {uuidValue, nextUpgradeID})
+                            end)
                             
-                            -- Sunucuyu yormamak ve insansı görünmek için küçük bekleme
-                            task.wait(0.2 + math.random()/5) 
+                            if not success then
+                                print("ERROR: InvokeServer failed! Reason: "..tostring(err))
+                            end
+
+                        else
+                            print("FAILURE: Could not find required data (UniqueId or PID). Skipping upgrade for this unit.")
                         end
                     end
                 end
+            else
+                print("ERROR: Could not find 'Hero' folder in workspace!")
             end
             
-            -- === FAZ 3: DALGAYI BAŞLATMA VE BEKLEME ===
+            print("-------------------------------------------------")
             print("Phase 3: Starting Wave...")
             RF_ClientRequestServer:InvokeServer(7)
             
             print("Waiting for round to end...")
-            -- !! DİKKAT: BU SÜREYİ BİR TURUN ORTALAMA NE KADAR SÜRDÜĞÜNE GÖRE AYARLA !!
             task.wait(90) 
             
-            -- === FAZ 4: MAÇI YENİDEN BAŞLATMA ===
             print("Phase 4: Restarting match...")
             RF_ClientRequestServer:InvokeServer(2000093, {false})
-            task.wait(5) -- Yeni tur yüklenmesi için bekle
+            task.wait(5)
         end
     end,
 }
@@ -86,7 +99,7 @@ local Macros = {
 -- ================================================================= --
 --                             GUI CODE                              --
 -- ================================================================= --
--- (Bu kısım öncekiyle aynı, değişiklik yok)
+-- (GUI KODU DEĞİŞMEDİ)
 
 local selectedMacroName = nil
 local isMacroRunning = false
@@ -328,4 +341,4 @@ ToggleButton.MouseButton1Click:Connect(ToggleMacro)
 MinimizeButton.MouseButton1Click:Connect(ToggleMinimize)
 MinimizedButton.MouseButton1Click:Connect(ToggleMinimize)
 
-print("Stickman TD Macro Player loaded successfully.")
+print("Stickman TD Macro Player [DEBUG MODE] loaded successfully.")
